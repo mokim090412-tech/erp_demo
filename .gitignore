@@ -1,0 +1,44 @@
+# ===== 배포 제외 / 보관용 =====
+미사용/
+
+# ===== 비밀정보 =====
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# ===== Vercel =====
+.vercel/
+
+# ===== 자동 생성 / 임시 파일 =====
+.playwright-mcp/
+*.log
+tmp/
+temp/
+*.tmp
+*.bak
+*~
+
+# ===== 윈도우 / macOS 탐색기 찌꺼기 =====
+Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+._*
+
+# ===== 오피스 문서 잠금 파일 =====
+~$*.docx
+~$*.xlsx
+~$*.pptx
+~$*.hwp
+
+# ===== 에디터 / IDE =====
+.vscode/
+.idea/
+*.swp
+
+# ===== Node =====
+node_modules/
+npm-debug.log*

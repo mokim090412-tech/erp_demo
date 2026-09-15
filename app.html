@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>(가상) 한빛상사 인사·총무 교육용 앱</title>
+<style>
+/* =====================================================================
+   디자인 토큰 — design.md(Clay.com 디자인 시스템)를 이 앱에 맞게 잘라 씀
+   ---------------------------------------------------------------------
+   가져온 것 : 크림 캔버스, 6색 브랜드 팔레트, 4px 여백 스케일,
+               라운드 스케일(6/8/12/16/24), 44px 터치 영역, 반응형 중단점
+   뺀 것     : 3D 클레이메이션 일러스트, 히어로/가격표/후기 카드 (우리 앱에 없는 화면)
+   바꾼 것   : ① 본문 16px → 14px, 표 13px (22칸 급여대장이 터지지 않게)
+               ② 경고 배너를 오커 채움으로 강화 (크림 배경에 묻히면 안 되는 필수 표시)
+               ③ 피처 카드 색을 "순환"이 아니라 "고정 의미"로 매핑 (admin 도구라 색이 뜻을 가져야 함)
+   못 쓴 것  : Plain Black 서체(Clay 전용 라이선스) · Inter(한글 글자 없음)
+               → Malgun Gothic 유지 + 제목에 음수 자간만 적용
+   ===================================================================== */
+:root{
+  /* 표면 */
+  --canvas:#fffaf0; --surface-soft:#faf5e8; --surface-card:#f5f0e0; --surface-strong:#ebe6d6;
+  --surface-dark:#0a1a1a; --surface-dark-2:#1a2a2a; --hairline:#e5e5e5;
+  /* 글자 */
+  --ink:#0a0a0a; --body-strong:#1a1a1a; --body:#3a3a3a; --muted:#6a6a6a; --muted-soft:#9a9a9a;
+  --primary:#0a0a0a; --on-primary:#ffffff;
+  /* 브랜드 6색 */
+  --brand-pink:#ff4d8b; --brand-teal:#1a3a3a; --brand-lavender:#b8a4ed;
+  --brand-peach:#ffb084; --brand-ochre:#e8b94a; --brand-mint:#a4d4c5; --brand-coral:#ff6b5a;
+  /* 시맨틱 */
+  --success:#22c55e; --warning:#f59e0b; --error:#ef4444;
+  /* 상태 배지 */
+  --ok-bg:#e3f5ea;  --ok-fg:#166534;
+  --bad-bg:#fdeae8; --bad-fg:#b42318;
+  --wait-bg:#efe9fb;--wait-fg:#5b3fa8;
+  --off-bg:#efece2; --off-fg:#5a5a5a;
+  --plan-bg:#e8f2ef;--plan-fg:#1a3a3a;
+  /* 여백 (4px 기준) */
+  --sp-xxs:4px; --sp-xs:8px; --sp-sm:12px; --sp-md:16px; --sp-lg:24px; --sp-xl:32px; --sp-xxl:48px;
+  /* 라운드 */
+  --r-xs:6px; --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:24px; --r-pill:9999px;
+  /* 별칭 (기존 코드 호환) */
+  --brand:var(--brand-teal); --line:var(--hairline); --panel:var(--canvas);
+  --mono:"Consolas","D2Coding",monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);color:var(--body);
+  font-family:"Malgun Gothic","맑은 고딕","Apple SD Gothic Neo",system-ui,sans-serif;font-size:14px;line-height:1.55}
+
+/* ===== 교육용 가상 자료 경고 배너 — 모든 화면 고정 =====
+   크림 캔버스와 옅은 노랑은 거의 같은 색이라 묻힌다.
+   이 표시는 프로젝트 1번 요구사항이므로 오커 채움으로 확실히 분리한다. */
+#eduBanner{position:sticky;top:0;z-index:100;background:var(--brand-ochre);border-bottom:2px solid #c9a032;
+  color:var(--ink);padding:var(--sp-xs) var(--sp-md);font-weight:700;font-size:13px;
+  display:flex;gap:var(--sp-sm);align-items:center;flex-wrap:wrap}
+#eduBanner .tag{background:var(--ink);color:var(--brand-ochre);border-radius:var(--r-pill);
+  padding:3px 10px;font-size:11px;letter-spacing:.5px}
+#eduBanner .sub{font-weight:400;color:#5c4708}
+
+#wrap{display:flex;min-height:calc(100vh - 40px)}
+
+/* ===== 사이드바 ===== */
+#side{width:212px;flex:none;background:var(--surface-dark);color:#c2ccc8;padding:var(--sp-md) 0 var(--sp-xxl)}
+#side .brand{padding:0 var(--sp-md) var(--sp-md);border-bottom:1px solid #243434;margin-bottom:var(--sp-sm)}
+#side .brand b{display:block;color:#fff;font-size:16px;letter-spacing:-.4px}
+#side .brand span{font-size:11px;color:#7e908b}
+#side .grp{padding:var(--sp-sm) var(--sp-md) var(--sp-xxs);font-size:12px;font-weight:600;color:#7e908b;letter-spacing:1.5px}
+#side a{display:block;padding:var(--sp-xs) var(--sp-md);color:#c2ccc8;text-decoration:none;cursor:pointer;
+  border-left:3px solid transparent;font-size:14px}
+#side a:hover{background:var(--surface-dark-2)}
+#side a.on{background:var(--surface-dark-2);color:#fff;border-left-color:var(--brand-mint);font-weight:700}
+#side .foot{margin-top:var(--sp-lg);padding:0 var(--sp-md)}
+#side .foot button{width:100%;height:40px;background:transparent;color:#c2ccc8;border:1px solid #35494a;
+  border-radius:var(--r-md);cursor:pointer;font-size:13px;font-weight:600}
+#side .foot button:hover{background:var(--surface-dark-2);filter:none}
+
+/* ===== 본문 ===== */
+#main{flex:1;max-width:1280px;margin:0 auto;padding:var(--sp-lg) var(--sp-lg) var(--sp-xxl);min-width:0}
+h1{font-size:28px;font-weight:600;letter-spacing:-.6px;color:var(--ink);
+  margin:0 0 var(--sp-xxs);display:flex;align-items:center;gap:var(--sp-sm);flex-wrap:wrap}
+.badge-v{background:var(--brand-ochre);color:var(--ink);border-radius:var(--r-pill);
+  font-size:12px;padding:3px 10px;font-weight:700;letter-spacing:0}
+.desc{color:var(--muted);margin:0 0 var(--sp-lg);font-size:14px}
+
+.card{background:var(--canvas);border:1px solid var(--hairline);border-radius:var(--r-lg);
+  padding:var(--sp-lg);margin-bottom:var(--sp-md)}
+.card > h3{margin:0 0 var(--sp-sm);font-size:16px;font-weight:600;letter-spacing:-.2px;color:var(--ink)}
+.row{display:flex;gap:var(--sp-md);flex-wrap:wrap}
+.row > .card{flex:1;min-width:240px}
+
+/* ===== KPI — design.md의 "피처 카드"를 쓰는 유일한 자리 ===== */
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:var(--sp-md);margin-bottom:var(--sp-lg)}
+.kpi .box{background:var(--surface-card);border-radius:var(--r-xl);padding:var(--sp-lg);border:1px solid transparent}
+.kpi .box .lbl{font-size:13px;font-weight:600;opacity:.75}
+.kpi .box .val{font-size:26px;font-weight:700;letter-spacing:-.8px;margin-top:var(--sp-xxs);white-space:nowrap}
+.kpi .box .sub{font-size:12px;opacity:.7;margin-top:2px}
+.kpi .box.t-lavender{background:var(--brand-lavender);color:var(--ink)}
+.kpi .box.t-peach{background:var(--brand-peach);color:var(--ink)}
+.kpi .box.t-ochre{background:var(--brand-ochre);color:var(--ink)}
+.kpi .box.t-teal{background:var(--brand-teal);color:var(--on-primary)}
+.kpi .box.t-coral{background:var(--brand-coral);color:var(--on-primary)}
+.kpi .box.t-mint{background:var(--brand-mint);color:var(--ink)}
+/* 문제 상태 — 6색 위에서도 보이도록 잉크 링을 쓴다 (빨강은 coral/peach 위에서 안 보임) */
+.kpi .box.alert{box-shadow:0 0 0 2px var(--ink)}
+/* 대시보드는 KPI가 정확히 6개 — design.md의 "피처 카드 3-up" 규칙대로 3열 2행 */
+.kpi.k3{grid-template-columns:repeat(3,1fr)}
+
+/* ===== 표 ===== */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{border-bottom:1px solid var(--hairline);padding:10px var(--sp-sm);text-align:left;white-space:nowrap}
+th{background:var(--surface-card);color:var(--body-strong);font-weight:600;font-size:12px}
+td{color:var(--body)}
+tbody tr:hover{background:var(--surface-soft)}
+td.num,th.num{text-align:right;font-family:var(--mono)}
+.scroll{max-height:560px;overflow:auto;border:1px solid var(--hairline);border-radius:var(--r-lg);background:var(--canvas)}
+.scroll table th{position:sticky;top:0;z-index:2}
+
+/* ===== 버튼 · 입력 (터치 영역 44px) ===== */
+button,.btn{background:var(--primary);color:var(--on-primary);border:0;border-radius:var(--r-md);
+  height:44px;padding:0 20px;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit}
+button:hover{filter:brightness(1.35)}
+button.ghost{background:var(--canvas);color:var(--ink);border:1px solid var(--hairline)}
+button.ghost:hover{background:var(--surface-card);filter:none}
+button.mini{height:32px;padding:0 12px;font-size:13px;border-radius:var(--r-sm)}
+button.danger{background:var(--error)}
+input,select,textarea{border:1px solid var(--hairline);border-radius:var(--r-md);height:44px;
+  padding:0 var(--sp-md);font-size:14px;font-family:inherit;background:var(--canvas);color:var(--ink)}
+textarea{height:auto;padding:var(--sp-sm) var(--sp-md)}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--ink)}
+label.f{display:inline-flex;flex-direction:column;gap:var(--sp-xxs);font-size:13px;color:var(--muted);
+  margin:0 var(--sp-sm) var(--sp-sm) 0}
+.toolbar{display:flex;gap:var(--sp-sm);align-items:flex-end;flex-wrap:wrap;margin-bottom:var(--sp-md)}
+
+/* ===== 배지 ===== */
+.pill{border-radius:var(--r-pill);padding:3px 10px;font-size:12px;font-weight:600;display:inline-block}
+.p-ok{background:var(--ok-bg);color:var(--ok-fg)}
+.p-bad{background:var(--bad-bg);color:var(--bad-fg)}
+.p-wait{background:var(--wait-bg);color:var(--wait-fg)}
+.p-off{background:var(--off-bg);color:var(--off-fg)}
+.p-plan{background:var(--plan-bg);color:var(--plan-fg);border:1px dashed var(--brand-teal)}
+
+/* ===== 안내 · 경고 상자 ===== */
+.note{background:var(--surface-card);border-left:3px solid var(--brand-teal);
+  padding:var(--sp-sm) var(--sp-md);border-radius:0 var(--r-md) var(--r-md) 0;font-size:13px;margin-bottom:var(--sp-md)}
+.warnbox{background:#fff1e6;border:1px solid var(--brand-peach);color:#6b3b12;
+  padding:var(--sp-sm) var(--sp-md);border-radius:var(--r-md);font-size:13px;margin-bottom:var(--sp-md)}
+.warnbox b{color:#8a3d00}
+
+/* ===== 조직도 ===== */
+.tree ul{list-style:none;margin:0;padding-left:var(--sp-lg);border-left:1px dashed #d6d0bf}
+.tree > ul{padding-left:0;border:0}
+.tree li{margin:var(--sp-xxs) 0}
+.tree .n-hq{font-weight:700;color:var(--brand-teal)}
+.tree .n-team{font-weight:700;color:var(--ink)}
+.tree .cnt{color:var(--muted);font-size:12px;font-weight:400}
+.tree .mem{color:var(--body);font-size:13px}
+
+/* ===== 회의실 달력 ===== */
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:var(--sp-xs)}
+.calgrid .d{background:var(--canvas);border:1px solid var(--hairline);border-radius:var(--r-sm);
+  min-height:72px;padding:var(--sp-xs);font-size:12px}
+.calgrid .d.hd{min-height:0;background:var(--surface-card);text-align:center;font-weight:600;color:var(--body-strong)}
+.calgrid .d.off{background:var(--surface-soft);color:var(--muted-soft)}
+.calgrid .d .dn{font-weight:700;font-size:13px;color:var(--ink)}
+.calgrid .d .ev{background:var(--surface-strong);color:var(--brand-teal);border-radius:var(--r-xs);
+  padding:1px 5px;margin-top:3px;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+
+/* ===== 실습 과제 ===== */
+.task{border:1px solid var(--hairline);border-radius:var(--r-lg);padding:var(--sp-md) var(--sp-lg);
+  margin-bottom:var(--sp-sm);background:var(--canvas)}
+.task.done{border-color:var(--brand-mint);background:#f2faf6}
+.task h4{margin:0 0 var(--sp-xxs);font-size:15px;font-weight:600;color:var(--ink)}
+.task .q{color:var(--body);font-size:14px;margin-bottom:var(--sp-sm)}
+.task .res{font-size:13px;margin-top:var(--sp-xs)}
+
+/* ===== 급여명세서 ===== */
+.payslip{max-width:680px;border:2px solid var(--ink);border-radius:var(--r-lg);padding:var(--sp-lg);
+  background:var(--canvas);position:relative;overflow:hidden}
+.payslip .wm{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:40px;font-weight:900;color:rgba(232,185,74,.28);transform:rotate(-22deg);pointer-events:none;letter-spacing:6px}
+.payslip h2{text-align:center;margin:0 0 var(--sp-xxs);font-size:20px;letter-spacing:-.4px;color:var(--ink)}
+.payslip .meta{text-align:center;color:var(--muted);font-size:12px;margin-bottom:var(--sp-md)}
+.payslip table{font-size:13px}
+.payslip .tot{font-size:18px;font-weight:800;letter-spacing:-.4px;color:var(--ink)}
+
+/* ===== 모달 ===== */
+.modal{position:fixed;inset:0;background:rgba(10,26,26,.45);display:flex;align-items:center;justify-content:center;z-index:200}
+.modal .inner{background:var(--canvas);border-radius:var(--r-lg);padding:var(--sp-lg);
+  max-width:660px;width:92%;max-height:86vh;overflow:auto}
+.modal h3{margin:0 0 var(--sp-sm);font-size:20px;font-weight:600;letter-spacing:-.4px;color:var(--ink)}
+.hide{display:none!important}
+.right{text-align:right}
+small.m{color:var(--muted)}
+a{color:var(--brand-teal)}
+
+/* ===== 반응형 ===== */
+@media (max-width:1024px){
+  .kpi{grid-template-columns:repeat(auto-fit,minmax(168px,1fr))}
+  .kpi.k3{grid-template-columns:repeat(2,1fr)}
+  #main{padding:var(--sp-md) var(--sp-md) var(--sp-xxl)}
+}
+@media (max-width:768px){
+  #wrap{flex-direction:column}
+  #side{width:100%;padding:var(--sp-xs) 0 var(--sp-sm)}
+  #side .brand{border-bottom:0;padding-bottom:var(--sp-xs);margin-bottom:var(--sp-xxs)}
+  #side .grp{display:inline-block;padding:var(--sp-xs) var(--sp-xs) 0 var(--sp-md)}
+  #side a{display:inline-block;padding:var(--sp-xs) var(--sp-sm);border-left:0;border-bottom:3px solid transparent}
+  #side a.on{border-left:0;border-bottom-color:var(--brand-mint)}
+  #side .foot{margin-top:var(--sp-sm)}
+  h1{font-size:22px}
+  .kpi{grid-template-columns:1fr 1fr}
+}
+
+@media print{
+  #side,#eduBanner,.toolbar,button{display:none!important}
+  body{background:#fff}
+  #main{padding:0;max-width:none}
+  .payslip{border:1px solid #000}
+  body::before{content:"교육용 가상 자료 - 실제 인사정보 아님";display:block;
+    text-align:center;font-weight:700;color:#b45309;border:2px solid #b45309;padding:6px;margin-bottom:10px}
+}
+</style>
+</head>
+<body>
+
+<div id="eduBanner">
+  <span class="tag">교육용</span>
+  <span>본 화면의 모든 자료는 교육을 위해 만든 <b>가상 자료</b>입니다. 실제 인사·급여 정보가 아닙니다.</span>
+  <span class="sub">· (가상) 한빛상사(주) · 기준일 2026-09-14</span>
+</div>
+
+<div id="wrap">
+  <nav id="side">
+    <div class="brand"><b>(가상) 한빛상사</b><span>인사·총무 교육용 앱 v1.0</span></div>
+    <div class="grp">인사 기본</div>
+    <a data-v="dash">대시보드</a>
+    <a data-v="emp">사원명부</a>
+    <a data-v="org">조직도</a>
+    <a data-v="appt">인사발령</a>
+    <div class="grp">근태 · 휴가</div>
+    <a data-v="att">근태 현황</a>
+    <a data-v="annual">연차 관리</a>
+    <a data-v="leave">휴가 신청·결재</a>
+    <div class="grp">급여 · 4대보험</div>
+    <a data-v="pay">급여대장</a>
+    <a data-v="slip">급여명세서</a>
+    <a data-v="ins">4대보험</a>
+    <div class="grp">총무</div>
+    <a data-v="stock">비품 재고</a>
+    <a data-v="asset">자산 대장</a>
+    <a data-v="room">회의실 예약</a>
+    <a data-v="doc">문서 대장</a>
+    <div class="grp">실습</div>
+    <a data-v="task">실습 과제</a>
+    <div class="foot">
+      <button onclick="resetAll()">데이터 초기화</button>
+    </div>
+  </nav>
+  <main id="main"></main>
+</div>
+
+<div id="modalHost"></div>
+
+<script>
+/* =====================================================================
+   (가상) 한빛상사 인사·총무 교육용 앱
+   ---------------------------------------------------------------------
+   ※ 이 파일의 모든 데이터는 교육 목적으로 처음부터 만들어낸 가상 자료입니다.
+      실존하는 회사·인물·급여·계약과 아무 관련이 없습니다.
+      주민등록번호·계좌번호 등 민감 식별정보는 가상으로도 만들지 않습니다.
+   ===================================================================== */
+
+const TODAY = '2026-09-14';          // 앱의 "오늘" (고정)
+const COMPANY = '(가상) 한빛상사 주식회사';
+const STORE_KEY = 'hanbit_edu_hr_v2';   // v2: 휴직사유 필드 추가 → 옛 저장 데이터는 버림
+
+/* ---------- 조직 ---------- */
+const ORG = [
+  { hq:'경영지원본부', teams:['경영지원팀'] },
+  { hq:'사업본부',     teams:['영업팀','물류팀'] },
+];
+const TEAM2HQ = {};
+ORG.forEach(o => o.teams.forEach(t => TEAM2HQ[t] = o.hq));
+
+const GRADES = ['사원','주임','대리','과장','차장','부장','이사'];
+
+/* ---------- 가상 사원 마스터 (10명: 재직 8 / 휴직 1 / 퇴사 1) ----------
+   [사번숫자, 이름, 팀, 직급, 입사일, 직책, 재직상태, 퇴사일, 공제대상가족수, 8~20세 자녀수, 휴직사유]
+   ※ 공제대상가족수는 본인·배우자를 각각 1명으로 셈 (소득세법 시행령 별표2 비고 2)
+      근로소득 간이세액표 조회에 쓰이는 값이며, 여기 값은 모두 가상입니다.              */
+const EMP_SEED = [
+  [1,'한도경','경영지원팀','이사','2013-03-02','본부장','재직','',4,2],
+  [2,'서지환','경영지원팀','부장','2014-05-12','팀장','재직','',3,1],
+  [3,'오유진','경영지원팀','과장','2017-09-01','','재직','',1,0],
+  [4,'신우재','영업팀','부장','2015-04-01','본부장','재직','',4,2],
+  [5,'심유나','영업팀','주임','2022-11-01','','재직','',1,0],
+  [6,'배수아','영업팀','대리','2020-07-01','','휴직','',3,0,'육아휴직(~2027-06-30)'],
+  [7,'천민호','물류팀','차장','2016-07-01','팀장','재직','',3,1],
+  [8,'나선호','물류팀','사원','2025-07-01','','재직','',1,0],
+  [9,'조민석','물류팀','사원','2026-03-02','','재직','',1,0],
+  [10,'육상현','영업팀','대리','2019-06-03','','퇴사','2026-05-31',2,0],
+];
+
+/* ---------- 유틸 ---------- */
+const won = n => Math.round(n).toLocaleString('ko-KR');
+const pad = (n,l=2) => String(n).padStart(l,'0');
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const d2 = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const fmt = dt => dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate());
+const WD = ['일','월','화','수','목','금','토'];
+const dayDiff = (a,b) => Math.round((d2(b)-d2(a))/86400000);
+/* 아직 입사하지 않은 사람(입사일 > 기준일)을 다루는 두 헬퍼.
+   근속이 음수가 되면 근속수당이 마이너스로 계산되므로 0으로 막는다. */
+const isFuture = ds => ds > TODAY;
+const tenure = e => Math.max(0, yearsBetween(e.join, e.status === '퇴사' && e.leaveDate ? e.leaveDate : TODAY));
+const yearsBetween = (from,to) => {
+  const f = d2(from), t = d2(to);
+  let y = t.getFullYear()-f.getFullYear();
+  if (t.getMonth() < f.getMonth() || (t.getMonth()===f.getMonth() && t.getDate()<f.getDate())) y--;
+  return y;
+};
+/* 고정 시드 난수 — 누가 언제 열어도 같은 값이 나오게 함 */
+function rng(seed){ let a = seed>>>0; return function(){
+  a += 0x6D2B79F5; let t = a; t = Math.imul(t^(t>>>15), t|1); t ^= t + Math.imul(t^(t>>>7), t|61);
+  return ((t^(t>>>14))>>>0)/4294967296; }; }
+function hashStr(s){ let h=2166136261; for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);} return h>>>0; }
+
+/* ---------- 공휴일(가상 설정: 2026년) ---------- */
+const HOLIDAYS = {
+  '2026-01-01':'신정','2026-03-01':'삼일절','2026-05-05':'어린이날','2026-06-06':'현충일',
+  '2026-08-15':'광복절','2026-09-24':'추석연휴','2026-09-25':'추석','2026-09-26':'추석연휴',
+  '2026-10-03':'개천절','2026-10-09':'한글날','2026-12-25':'성탄절',
+};
+const isWorkday = ds => { const w = d2(ds).getDay(); return w!==0 && w!==6 && !HOLIDAYS[ds]; };
+
+/* =====================================================================
+   초기 상태 만들기 (가상)
+   ===================================================================== */
+function buildInitialState(){
+  const employees = EMP_SEED.map(r => ({
+    id: 'HB-' + pad(r[0], 4),
+    name: r[1], team: r[2], hq: TEAM2HQ[r[2]], grade: r[3],
+    join: r[4], role: r[5], status: r[6], leaveDate: r[7],
+    fam: r[8], kids: r[9], leaveReason: r[10] || '',
+    ext: String(1000 + r[0]),
+    email: 'hb' + pad(r[0],4) + '@hanbit-edu.example',
+  }));
+
+  /* 인사발령 이력 — 입사 발령은 전원 자동 생성, 승진/전보는 가상 이력 */
+  const appts = employees.map(e => ({
+    no:0, date:e.join, empId:e.id, name:e.name, type:'입사',
+    before:'-', after:e.team+' '+e.grade, note:'신규 입사(가상)'
+  }));
+  const extra = [
+    ['2026-01-01','HB-0005','승진','영업팀 사원','영업팀 주임','2026년 정기승진(가상)'],
+    ['2026-01-01','HB-0007','승진','물류팀 과장','물류팀 차장','2026년 정기승진(가상)'],
+    ['2026-03-01','HB-0006','전보','물류팀 대리','영업팀 대리','영업 인력 보강(가상)'],
+    ['2026-05-31','HB-0010','퇴사','영업팀 대리','-','일신상의 사유(가상)'],
+    ['2026-07-01','HB-0006','휴직','영업팀 대리','영업팀 대리','육아휴직(가상, ~2027-06-30)'],
+  ];
+  extra.forEach(x => {
+    const e = employees.find(v => v.id === x[1]);
+    appts.push({no:0, date:x[0], empId:x[1], name:e?e.name:'', type:x[2], before:x[3], after:x[4], note:x[5]});
+  });
+  appts.sort((a,b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+  appts.forEach((a,i) => a.no = i+1);
+
+  /* 휴가 신청 내역 (가상) — 대기 건은 결재 실습용 */
+  const L = (no,empId,type,from,to,days,status,reason) => {
+    const e = employees.find(v=>v.id===empId);
+    return {no, empId, name:e.name, team:e.team, type, from, to, days, status, reason,
+            reqDate:from, decidedBy: status==='대기' ? '' : '팀장'};
+  };
+  const leaves = [
+    L(1,'HB-0003','연차','2026-07-28','2026-07-31',4,'승인','여름휴가(가상)'),
+    L(2,'HB-0005','연차','2026-08-03','2026-08-07',5,'승인','여름휴가(가상)'),
+    L(3,'HB-0007','연차','2026-08-10','2026-08-12',3,'승인','가족 행사(가상)'),
+    L(4,'HB-0002','반차(오후)','2026-08-20','2026-08-20',0.5,'승인','개인 사유(가상)'),
+    L(5,'HB-0001','연차','2026-08-24','2026-08-25',2,'승인','개인 사유(가상)'),
+    L(6,'HB-0009','병가','2026-09-02','2026-09-03',2,'승인','진료(가상)'),
+    L(7,'HB-0008','연차','2026-09-07','2026-09-08',2,'승인','개인 사유(가상)'),
+    L(8,'HB-0004','연차','2026-09-11','2026-09-11',1,'반려','거래처 일정 중복(가상)'),
+    L(9,'HB-0003','연차','2026-09-17','2026-09-18',2,'대기','개인 사유(가상)'),
+    L(10,'HB-0005','연차','2026-09-21','2026-09-23',3,'대기','추석 전 휴가(가상)'),
+    L(11,'HB-0001','반차(오전)','2026-09-18','2026-09-18',0.5,'대기','병원 방문(가상)'),
+    L(12,'HB-0009','연차','2026-09-28','2026-09-30',3,'대기','가족 여행(가상)'),
+    L(13,'HB-0008','경조사','2026-09-16','2026-09-18',3,'대기','본인 결혼(가상)'),
+    L(14,'HB-0008','연차','2026-10-05','2026-10-06',2,'대기','신혼여행(가상)'),
+  ];
+
+  /* 비품 재고 (가상) */
+  const stock = [
+    ['ST-01','A4 복사지(박스)','사무용품','박스',8,5,'문구나라(가상)',24000],
+    ['ST-02','볼펜(흑, 12자루)','사무용품','갑',14,8,'문구나라(가상)',7200],
+    ['ST-03','포스트잇 3x3','사무용품','개',6,10,'문구나라(가상)',1800],
+    ['ST-04','클리어파일 A4','사무용품','개',22,15,'문구나라(가상)',1200],
+    ['ST-05','토너 (흑백 복합기)','소모품','개',3,2,'오피스원(가상)',89000],
+    ['ST-06','잉크젯 카트리지','소모품','개',1,3,'오피스원(가상)',38000],
+    ['ST-07','종이컵 (1000입)','탕비','박스',4,3,'생활마트(가상)',16000],
+    ['ST-08','원두 1kg','탕비','봉',1,2,'생활마트(가상)',21000],
+    ['ST-09','믹스커피 100입','탕비','박스',5,3,'생활마트(가상)',12500],
+    ['ST-10','생수 2L (6입)','탕비','박스',6,4,'생활마트(가상)',6900],
+    ['ST-11','마스크 (50매)','위생','박스',5,3,'세이프케어(가상)',9000],
+    ['ST-12','손소독제 500ml','위생','개',3,3,'세이프케어(가상)',4800],
+    ['ST-13','물류용 박스테이프','물류','개',18,12,'포장마트(가상)',1500],
+    ['ST-14','안전장갑','물류','켤레',7,10,'포장마트(가상)',2300],
+  ].map(r => ({code:r[0], name:r[1], cat:r[2], unit:r[3], qty:r[4], safe:r[5], vendor:r[6], price:r[7]}));
+
+  /* 자산 대장 (가상) */
+  const assetSeed = [
+    ['AS-2023-001','노트북','HB-0001','2023-02-10',1450000,'사용중'],
+    ['AS-2023-002','노트북','HB-0002','2023-02-10',1450000,'사용중'],
+    ['AS-2023-003','노트북','HB-0003','2023-02-10',1450000,'사용중'],
+    ['AS-2023-004','모니터 27"','HB-0002','2023-02-10',320000,'사용중'],
+    ['AS-2023-005','모니터 27"','HB-0003','2023-02-10',320000,'사용중'],
+    ['AS-2024-001','노트북','HB-0004','2024-01-15',1520000,'사용중'],
+    ['AS-2024-002','노트북','HB-0007','2024-01-15',1520000,'사용중'],
+    ['AS-2024-003','바코드 스캐너','HB-0007','2024-04-02',290000,'사용중'],
+    ['AS-2024-004','법인 휴대폰','HB-0004','2024-05-20',980000,'사용중'],
+    ['AS-2024-005','법인 휴대폰','HB-0010','2024-05-20',980000,'사용중'],
+    ['AS-2025-001','노트북','HB-0005','2025-01-08',1610000,'사용중'],
+    ['AS-2025-002','노트북','HB-0008','2025-07-03',1610000,'사용중'],
+    ['AS-2025-003','지게차(전동)','','2025-09-01',18500000,'사용중'],
+    ['AS-2026-001','노트북','HB-0009','2026-03-04',1680000,'사용중'],
+    ['AS-2026-004','노트북','','2026-06-02',1680000,'보관중'],
+    ['AS-2022-011','노트북','','2022-03-02',1380000,'폐기대기'],
+    ['AS-2022-012','프로젝터','','2022-03-02',760000,'수리중'],
+  ];
+  const assets = assetSeed.map(r => ({code:r[0], name:r[1], holder:r[2], acqDate:r[3], price:r[4], status:r[5]}));
+
+  /* 회의실 예약 (가상) — 2026-09-14 주간 */
+  const rooms = ['대회의실(3층)','소회의실(3층)'];
+  const bookings = [
+    {no:1, room:rooms[0], date:'2026-09-14', start:'10:00', end:'11:30', title:'9월 전사 주간회의(가상)', by:'HB-0002'},
+    {no:2, room:rooms[1], date:'2026-09-14', start:'14:00', end:'15:00', title:'채용 면접(가상)', by:'HB-0003'},
+    {no:3, room:rooms[1], date:'2026-09-15', start:'09:30', end:'10:30', title:'물류 일일점검(가상)', by:'HB-0007'},
+    {no:4, room:rooms[0], date:'2026-09-16', start:'13:00', end:'17:00', title:'법정의무교육(가상)', by:'HB-0003'},
+    {no:5, room:rooms[1], date:'2026-09-16', start:'11:00', end:'12:00', title:'거래처 단가 협의(가상)', by:'HB-0004'},
+    {no:6, room:rooms[0], date:'2026-09-18', start:'10:00', end:'12:00', title:'3분기 실적 점검(가상)', by:'HB-0002'},
+  ];
+
+  /* 문서 대장 (가상) */
+  const docs = [
+    ['2026-한빛-001','2026-01-09','발송','2026년 근로계약 갱신 안내(가상)','경영지원팀','전 직원',5],
+    ['2026-한빛-002','2026-02-02','접수','산업안전보건 교육 실시 안내(가상)','(가상)안전관리원','경영지원팀',3],
+    ['2026-한빛-003','2026-03-05','접수','2026년 정기 소방점검 통보(가상)','(가상)소방안전공사','경영지원팀',5],
+    ['2026-한빛-004','2026-03-20','발송','사무실 임대차 갱신 요청(가상)','경영지원팀','(가상)한빛빌딩관리단',10],
+    ['2026-한빛-005','2026-04-01','접수','4대보험 요율 변경 안내(가상)','(가상)사회보험공단','경영지원팀',5],
+    ['2026-한빛-006','2026-04-17','발송','물류센터 안전점검 결과 보고(가상)','물류팀','경영지원본부',5],
+    ['2026-한빛-007','2026-05-11','접수','정기 근로감독 자료 제출 요청(가상)','(가상)지방고용노동청','경영지원팀',10],
+    ['2026-한빛-008','2026-05-29','발송','경력증명서 발급(가상)','경영지원팀','육상현',30],
+    ['2026-한빛-009','2026-07-02','발송','하계휴가 운영 계획 공지(가상)','경영지원팀','전 직원',3],
+    ['2026-한빛-010','2026-07-24','접수','전기안전 정기점검 결과(가상)','(가상)전기안전공사','경영지원팀',5],
+    ['2026-한빛-011','2026-08-11','발송','추석 연휴 근무 계획(가상)','경영지원팀','전 직원',3],
+    ['2026-한빛-012','2026-08-28','접수','법정의무교육 이수 안내(가상)','(가상)직장교육센터','경영지원팀',3],
+    ['2026-한빛-013','2026-09-04','발송','비품 구매 품의(가상)','경영지원팀','대표이사',5],
+    ['2026-한빛-014','2026-09-10','접수','건강검진 대상자 통보(가상)','(가상)건강관리공단','경영지원팀',5],
+  ].map(r => ({no:r[0], date:r[1], kind:r[2], title:r[3], from:r[4], to:r[5], keep:r[6]}));
+
+  return {
+    employees, appts, leaves, stock,
+    stockLogs: [], assets, rooms, bookings, docs,
+    taskLog: {},
+    seq: { leave: leaves.length, booking: bookings.length, appt: appts.length }
+  };
+}
+
+/* ---------- 저장 / 로드 ---------- */
+let S = null;
+function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(e){ console.warn('저장 실패', e); } }
+function load(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) { S = JSON.parse(raw); return; }
+  }catch(e){ console.warn('불러오기 실패', e); }
+  S = buildInitialState(); save();
+}
+function resetAll(){
+  if (!confirm('교육용 가상 데이터를 처음 상태로 되돌립니다.\n실습으로 입력한 내용은 모두 사라집니다. 진행할까요?')) return;
+  S = buildInitialState(); save(); render();
+  alert('초기 상태로 되돌렸습니다. (교육용 가상 자료)');
+}
+const emp = id => S.employees.find(e => e.id === id);
+const activeEmps = () => S.employees.filter(e => e.status !== '퇴사');
+
+/* =====================================================================
+   근태 생성 (고정 시드 → 항상 같은 결과)
+   ===================================================================== */
+/* 근태는 두 구간으로 나뉜다 (PRD 규칙 4)
+   · 실적 구간 ATT_FROM ~ ATT_TO   : 기준일 직전 근무일까지. 출퇴근·연장·지각·결근 기록이 있다.
+   · 예정 구간 ATT_TO ~ ATT_PLAN_TO: 아직 오지 않은 날. 출퇴근 기록은 없고,
+                                     승인된 휴가와 공휴일만 보인다.
+   급여는 "실적 구간"만 쓴다. 미래의 출퇴근을 지어내면 그게 더 이상하기 때문이다. */
+const ATT_FROM = '2026-08-01', ATT_TO = '2026-09-11', ATT_PLAN_TO = '2026-09-30';
+let _attCache = null;
+function attendance(){
+  if (_attCache) return _attCache;
+  const rows = [];
+  const approvedLeaveDays = {};   // empId|date -> 휴가종류
+  S.leaves.filter(l => l.status === '승인').forEach(l => {
+    for (let c = d2(l.from); c <= d2(l.to); c.setDate(c.getDate()+1))
+      approvedLeaveDays[l.empId + '|' + fmt(c)] = l.type;
+  });
+
+  S.employees.forEach(e => {
+    const r = rng(hashStr(e.id));
+    for (let c = d2(ATT_FROM); c <= d2(ATT_PLAN_TO); c.setDate(c.getDate()+1)) {
+      const ds = fmt(c);
+      if (!isWorkday(ds)) continue;
+      if (ds < e.join) continue;
+      if (e.status === '퇴사' && e.leaveDate && ds > e.leaveDate) continue;
+      const lv = approvedLeaveDays[e.id + '|' + ds];
+      const planned = ds > ATT_TO;          // 아직 오지 않은 날 — 난수를 소비하지 않는다
+      let state, inT = '', outT = '', ot = 0;
+      if (e.status === '휴직') { state = '휴직'; }
+      else if (planned) { state = lv ? '휴가(예정)' : '미입력'; }
+      else if (lv) { state = lv.startsWith('반차') ? '반차' : '휴가'; if (state==='반차'){ inT='09:00'; outT='14:00'; } }
+      else {
+        const p = r();
+        if (p < 0.030)      { state = '지각'; inT = '09:' + pad(8 + Math.floor(r()*40)); outT = '18:0' + Math.floor(r()*9); }
+        else if (p < 0.045) { state = '조퇴'; inT = '08:5' + Math.floor(r()*9); outT = '1' + (4+Math.floor(r()*3)) + ':30'; }
+        else if (p < 0.052) { state = '결근'; }
+        else {
+          state = '정상';
+          inT = '08:' + pad(35 + Math.floor(r()*24));
+          const otH = r() < 0.32 ? (1 + Math.floor(r()*3)) : 0;
+          ot = otH;
+          outT = pad(18 + otH) + ':' + pad(Math.floor(r()*6)*10);
+        }
+      }
+      rows.push({empId:e.id, name:e.name, team:e.team, date:ds, w:WD[c.getDay()], state, inT, outT, ot, planned});
+    }
+  });
+  _attCache = rows;
+  return rows;
+}
+/* 집계는 실적 구간만 센다 → 급여(연장수당·결근공제)가 미래 날짜에 흔들리지 않는다 */
+function attSummary(empId, ym){
+  const all  = attendance().filter(a => a.empId === empId && a.date.startsWith(ym));
+  const rows = all.filter(a => !a.planned);
+  const plan = all.filter(a => a.planned);
+  const c = {정상:0, 지각:0, 조퇴:0, 결근:0, 휴가:0, 반차:0, 휴직:0, ot:0,
+             days:rows.length, planDays:plan.length, 미입력:0, '휴가(예정)':0};
+  rows.forEach(a => { c[a.state]++; c.ot += a.ot; });
+  plan.forEach(a => { c[a.state] = (c[a.state] || 0) + 1; });
+  return c;
+}
+
+/* =====================================================================
+   연차 계산 (회계연도 1/1 기준 · 교육용 규칙)
+   ===================================================================== */
+function annual(e){
+  const joinY = Number(e.join.slice(0,4));
+  let grant = 0, basis = '';
+  if (joinY >= 2026) {
+    // 입사 1년 미만: 1개월 개근 시 1일 (최대 11일)
+    let m = 0, c = d2(e.join);
+    while (true) { c.setMonth(c.getMonth()+1); if (fmt(c) <= TODAY) m++; else break; if (m >= 11) break; }
+    grant = m; basis = '입사 1년 미만 → 1개월 개근당 1일 (현재 ' + m + '개월 경과)';
+  } else if (joinY === 2025) {
+    // 전년도 입사자: 회계연도 비례 부여
+    const workedDays = dayDiff(e.join, '2025-12-31') + 1;
+    grant = Math.round(15 * workedDays / 365 * 10) / 10;
+    basis = '전년도 입사 → 15일 × (2025년 재직 ' + workedDays + '일 ÷ 365) = ' + grant + '일';
+  } else {
+    const y = yearsBetween(e.join, '2026-01-01');
+    grant = Math.min(25, 15 + Math.floor((y-1)/2));
+    basis = '근속 ' + y + '년 → 기본 15일 + 가산 ' + Math.max(0, Math.floor((y-1)/2)) + '일 (상한 25일)';
+  }
+  // 기초 사용분(전산 이관 가상값) + 당기 승인분
+  const r = rng(hashStr(e.id + 'annual'));
+  const carried = Math.round(r() * grant * 0.55 * 2) / 2;
+  const approved = S.leaves
+    .filter(l => l.empId === e.id && l.status === '승인' && l.from.startsWith('2026')
+                 && (l.type === '연차' || l.type.startsWith('반차')))
+    .reduce((s,l) => s + l.days, 0);
+  const used = Math.round((carried + approved) * 10) / 10;
+  return {grant, basis, carried, approved, used, remain: Math.round((grant - used)*10)/10};
+}
+
+/* =====================================================================
+   급여 계산 (교육용 단순화 규칙 — 실제 세법·요율과 다름)
+   ===================================================================== */
+const BASE_PAY = {사원:2400000, 주임:2700000, 대리:3100000, 과장:3700000, 차장:4300000, 부장:5000000, 이사:6200000};
+const ROLE_PAY = {'팀장':250000, '본부장':450000, '':0};
+const MEAL = 200000;                       // 식대(비과세)
+
+/* ── 2026년 4대보험 요율 (근로자 부담분) ────────────────────────────────
+   건강보험 7.19% · 장기요양 건강보험료의 13.14% : 보건복지부 2026년 확정 고시
+   국민연금 9.5%(노사 각 4.75%) · 기준소득월액 상한 637만원 / 하한 40만원
+   고용보험 실업급여 근로자 0.9%
+   ※ 요율은 해마다 바뀝니다. 교육 시점에 맞춰 아래 숫자만 고치면 전 화면에 반영됩니다. */
+const RATE = { 국민연금:0.0475, 건강보험:0.03595, 장기요양:0.1314, 고용보험:0.009 };
+const RATE_CO_EI = 0.0115;                 // 고용보험 사업주 부담 (150인 미만 가정)
+const PENSION_CAP = 6370000, PENSION_FLOOR = 400000;
+const r10 = n => Math.floor(n/10)*10;
+
+/* ── 근로소득 간이세액표 (소득세법 시행령 [별표 2], 2026. 2. 27. 개정) ──
+   국가법령정보센터에서 내려받은 공식 표 제6호를 그대로 담았습니다.
+   행 = 월급여액(비과세 제외) 구간, 열 = 공제대상가족의 수 1~11명.           */
+const TAX_BOUNDS = (function(){
+  const d = '770,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20'.split(',').map(Number);
+  const b = [d[0]];
+  for (let i = 1; i < d.length; i++) b.push(b[i-1] + d[i]);
+  return b;                                 // 길이 = 행수 + 1 (천원 단위)
+})();
+const TAX_ROWS = ',,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;,,,,,,,,,,;sw,,,,,,,,,,;uu,,,,,,,,,,;ws,,,,,,,,,,;yq,,,,,,,,,,;10o,,,,,,,,,,;12m,,,,,,,,,,;14k,,,,,,,,,,;16i,,,,,,,,,,;18g,,,,,,,,,,;1ae,,,,,,,,,,;1cc,,,,,,,,,,;1ea,,,,,,,,,,;1g8,,,,,,,,,,;1i6,,,,,,,,,,;1k4,,,,,,,,,,;1m2,,,,,,,,,,;1o0,,,,,,,,,,;1py,,,,,,,,,,;1rw,,,,,,,,,,;1tu,,,,,,,,,,;1vs,,,,,,,,,,;1xg,,,,,,,,,,;1ze,,,,,,,,,,;21c,,,,,,,,,,;23a,,,,,,,,,,;258,,,,,,,,,,;276,,,,,,,,,,;294,,,,,,,,,,;2b2,,,,,,,,,,;2d0,,,,,,,,,,;2ey,,,,,,,,,,;2gw,,,,,,,,,,;2iu,,,,,,,,,,;2ks,,,,,,,,,,;2mq,,,,,,,,,,;2oo,,,,,,,,,,;2qm,,,,,,,,,,;2sk,,,,,,,,,,;2us,,,,,,,,,,;2xu,,,,,,,,,,;30m,,,,,,,,,,;33e,,,,,,,,,,;36g,,,,,,,,,,;398,,,,,,,,,,;3c0,,,,,,,,,,;3f2,,,,,,,,,,;3hu,,,,,,,,,,;3km,,,,,,,,,,;3no,,,,,,,,,,;3qg,,,,,,,,,,;3t8,,,,,,,,,,;3wa,,,,,,,,,,;3z2,,,,,,,,,,;41u,,,,,,,,,,;44w,,,,,,,,,,;47o,,,,,,,,,,;4ag,tg,,,,,,,,,;4di,wi,,,,,,,,,;4ga,za,,,,,,,,,;4j2,122,,,,,,,,,;4m4,154,,,,,,,,,;4ow,17w,,,,,,,,,;4ro,1ao,,,,,,,,,;4uq,1dq,,,,,,,,,;4xi,1gi,,,,,,,,,;50a,1ja,,,,,,,,,;53c,1mc,,,,,,,,,;564,1p4,,,,,,,,,;58w,1rw,,,,,,,,,;5by,1uy,,,,,,,,,;5eq,1xq,,,,,,,,,;5hi,20i,,,,,,,,,;5ka,23a,,,,,,,,,;5nc,26c,,,,,,,,,;5q4,294,,,,,,,,,;5sw,2bw,,,,,,,,,;5vy,2ey,,,,,,,,,;5yq,2hq,,,,,,,,,;61i,2ki,,,,,,,,,;64k,2nk,,,,,,,,,;67c,2qc,,,,,,,,,;6a4,2t4,,,,,,,,,;6d6,2w6,,,,,,,,,;6fy,2yy,,,,,,,,,;6iq,31q,,,,,,,,,;6ls,34s,,,,,,,,,;6ok,37k,,,,,,,,,;6rc,3ac,,,,,,,,,;6vs,3es,,,,,,,,,;71c,3kc,,,,,,,,,;776,3q6,,,,,,,,,;7d0,3w0,,,,,,,,,;7ik,41k,,,,,,,,,;7oe,47e,,,,,,,,,;7u8,4d8,,,,,,,,,;7zs,4is,,,,,,,,,;85m,4om,,,,,,,,,;8bg,4ug,,,,,,,,,;8h0,500,,,,,,,,,;8mu,55u,,,,,,,,,;8so,5bo,,,,,,,,,;8y8,5h8,,,,,,,,,;942,5n2,,,,,,,,,;99w,5sw,,,,,,,,,;9fg,5yg,,,,,,,,,;9la,64a,,,,,,,,,;9r4,6a4,,,,,,,,,;9wo,6fo,,,,,,,,,;a2i,6li,,,,,,,,,;a8c,6rc,,,,,,,,,;adw,6ww,sw,,,,,,,,;ajq,72q,yg,,,,,,,,;apk,78k,140,,,,,,,,;av4,7e4,19k,,,,,,,,;b0y,7jy,1eu,,,,,,,,;b6s,7ps,1ke,,,,,,,,;bcc,7vc,1py,,,,,,,,;bi6,816,1vi,,,,,,,,;bnq,86q,212,,,,,,,,;btk,8ck,26m,,,,,,,,;bze,8ie,2bw,,,,,,,,;c4y,8ny,2hg,,,,,,,,;cas,8ts,2n0,,,,,,,,;cgm,8zm,2sk,,,,,,,,;cm6,956,2y4,,,,,,,,;cs0,9b0,33o,,,,,,,,;cxu,9gu,398,,,,,,,,;d3e,9me,3ei,sw,,,,,,,;d98,9s8,3k2,yg,,,,,,,;df2,9y2,3pm,140,,,,,,,;dkm,a3m,3v6,19a,,,,,,,;dqg,a9g,40q,1eu,,,,,,,;dwa,afa,46a,1ke,,,,,,,;e1u,aku,4bk,1py,,,,,,,;e7o,aqo,4h4,1vi,,,,,,,;edi,awi,4mo,212,,,,,,,;ekg,b22,4s8,26c,,,,,,,;etc,b7w,4xs,2bw,,,,,,,;f28,bdq,53c,2hg,,,,,,,;fbe,bja,58w,2n0,,,,,,,;fka,bp4,5e6,2sk,,,,,,,;ft6,buy,5jq,2y4,,,,,,,;g22,c0i,5pa,33o,,,,,,,;gay,c6c,5uu,38y,,,,,,,;gju,cc6,60e,3ei,sw,,,,,,;gsq,chq,65y,3k2,yg,,,,,,;h1m,cnk,6b8,3pm,13q,,,,,,;has,ct4,6gs,3v6,19a,,,,,,;hjo,cyy,6mc,40q,1eu,,,,,,;hsk,d4s,6rw,460,1ke,,,,,,;i1g,dac,6xg,4bk,1py,,,,,,;iac,dg6,730,4h4,1vi,,,,,,;ij8,dm0,78k,4mo,212,,,,,,;is4,drk,7du,4s8,26c,,,,,,;j10,dxe,7je,4xs,2bw,,,,,,;ja6,e38,7oy,53c,2hg,,,,,,;jj2,e8s,7ui,58m,2n0,,,,,,;jry,eem,802,5e6,2sk,,,,,,;k0u,eme,85m,5jq,2y4,,,,,,;k9q,eva,8aw,5pa,33e,,,,,,;kim,f46,8gg,5uu,38y,,,,,,;kri,fd2,8m0,60e,3ei,sw,,,,,;l0o,fm8,8rk,65o,3k2,y6,,,,,;l9k,fv4,8x4,6b8,3pm,13q,,,,,;lig,g40,92o,6gs,3v6,19a,,,,,;lrc,gcw,988,6mc,40q,1eu,,,,,;m08,gls,9di,6rw,460,1ke,,,,,;m94,guo,9j2,6xg,4bk,1py,,,,,;mi0,h3k,9om,730,4h4,1vi,,,,,;mqw,hcg,9u6,78a,4mo,20s,,,,,;n02,hlm,9zq,7du,4s8,26c,,,,,;n8y,hui,a5a,7je,4xs,2bw,,,,,;nhu,i3e,aak,7oy,532,2hg,,,,,;nqq,ica,ag4,7ui,58m,2n0,,,,,;nzm,il6,alo,802,5e6,2sk,,,,,;o8i,iu2,ar8,85c,5jq,2xu,,,,,;ohe,j2y,aws,8aw,5pa,33e,,,,,;oqa,jbu,b2c,8gg,5uu,38y,,,,,;ozg,jl0,b7m,8m0,604,3ei,sm,,,,;p8c,jtw,bd6,8rk,65o,3k2,y6,,,,;ph8,k2s,biq,8x4,6b8,3pm,13q,,,,;pq4,kbo,boa,92o,6gs,3v6,19a,,,,;pz0,kkk,btu,97y,6mc,40g,1eu,,,,;q7w,ktg,bze,9di,6rw,460,1ke,,,,;qgs,l2c,c4y,9j2,6xg,4bk,1py,,,,;qpy,lbi,ca8,9om,72q,4h4,1v8,,,,;qyu,lke,cfs,9u6,78a,4mo,20s,,,,;r7q,lta,clc,9zq,7du,4s8,26c,,,,;rgw,m2g,cr6,a5a,7jo,4xs,2c6,,,,;rqc,mbw,cx0,ab4,7pi,53m,2i0,,,,;rzs,mlc,d2u,ah8,7vc,59q,2nu,,,,;s9i,mv2,d8o,an2,816,5fk,2to,,,,;siy,n4i,dei,asw,870,5le,2zi,,,,;sse,ndy,dkm,ayq,8d4,5r8,35m,,,,;t1u,nne,dqg,b4k,8iy,5x2,3bg,,,,;tbk,nx4,dwa,bae,8os,62w,3ha,ve,,,;tl0,o6k,e24,bgi,8um,690,3n4,11i,,,;tym,og0,e7y,bmc,90g,6eu,3sy,17c,,,;umi,opg,ee2,bs6,96k,6ko,3z2,1d6,,,;va4,oyw,elk,by0,9ce,6qi,44w,1j0,,,;vy0,p8m,euq,c3u,9i8,6wc,4aq,1ou,,,;wlw,pi2,f3w,c9y,9o2,72g,4gk,1uy,,,;x9i,pri,fd2,cfs,9tw,78a,4me,20s,,,;xxe,q0y,fm8,clm,a00,7e4,4si,26m,,,;yl0,qao,fve,crg,a5u,7jy,4yc,2cg,,,;z8w,qk4,g4k,cxa,abo,7ps,546,2ia,,,;zws,qtk,gdq,d3e,ahi,7vw,5a0,2oe,,,;10ke,r30,gmw,d98,anc,81q,5fu,2u8,,,;118a,rcq,gw2,df2,atg,87k,5ly,302,,,;11vw,rm6,h58,dkw,aza,8de,5rs,35w,,,;12js,rvm,hee,dqq,b54,8j8,5xm,3bq,,,;137e,s52,hnk,dwu,bay,8pc,63g,3hu,vy,,;13va,sei,hwq,e2o,bgs,8v6,69a,3no,11s,,;14j6,so8,i5w,e8i,bmm,910,6f4,3ti,17m,,;156s,sxo,if2,eec,bsq,96u,6l8,3zc,1dq,,;15uo,t74,io8,eme,byk,9co,6r2,456,1jk,,;16ia,tgk,ix4,eva,c4e,9is,6ww,4ba,1pe,,;1766,tqa,j6a,f4g,ca8,9om,72q,4h4,1v8,,;17ts,ubo,jfg,fdm,cg2,9ug,78k,4my,212,,;18ho,uzk,jom,fms,cm6,a0a,7eo,4ss,276,,;195k,vng,jxs,fvy,cs0,a64,7ki,4ym,2d0,,;19t6,wb2,k6y,g54,cxu,ac8,7qc,54q,2iu,,;1ah2,wyy,kg4,gea,d3o,ai2,7w6,5ak,2oo,,;1b4o,xmk,kpa,gng,d9i,anw,820,5ge,2ui,,;1bsk,yag,kyg,gwm,dfm,atq,884,5m8,30m,,;1cg6,yy2,l7m,h5s,dlg,azk,8dy,5s2,36g,,;1d42,zly,lgs,hey,dra,b5o,8js,5y6,3ca,,;1dry,109u,lpy,ho4,dx4,bbi,8pm,640,3i4,wi,;1efk,10xg,lz4,hxa,e2y,bhc,8vg,69u,3ny,12c,;1f3g,11lc,m8a,i6g,e92,bn6,91k,6fo,3u2,186,;1fr2,128y,mhg,ifm,eew,bt0,97e,6li,3zw,1e0,;1gey,12wu,mqm,ios,emy,byu,9d8,6rc,45q,1ju,;1h2k,13kg,mzs,ixy,ew4,c4y,9j2,6xg,4bk,1py,;1hqg,148c,n8y,j74,f5a,cas,9ow,73a,4he,1vs,;1iec,14w8,ni4,jga,feg,cgm,9v0,794,4ni,21m,;1j1y,15ju,nra,jpg,fnm,cmg,a0u,7ey,4tc,27g,;1jpu,167q,o0g,jym,fws,csa,a6o,7ks,4z6,2da,;1kdg,16vc,o9m,k7s,g5y,cye,aci,7qw,550,2je,;1lda,17v6,on8,kle,gjk,d70,ale,7zi,5dw,2s0,;1mos,196o,p5k,l3q,h1w,diy,ax2,8bg,5pk,33y,;1o0a,1ai6,pnw,lm2,hk8,dum,b90,8n4,61i,3fm,u0;1pbs,1bto,q68,m4e,i2k,e6k,bko,8z2,6d6,3rk,15o;1qna,1d56,qok,mmq,ikw,ej2,bwm,9aq,6p4,438,1hm;1rys,1ego,r6w,n52,j38,f1e,c8a,9me,70s,4ew,1ta;1tak,1fsg,rp8,nne,jlk,fjq,cjy,9yc,7cg,4qu,24y;1um2,1h3y,s7k,o5q,k3w,g22,cvw,aa0,7oe,52i,2gw;1vxk,1ifg,spw,oo2,km8,gke,d7k,aly,802,5eg,2sk;1x92,1jqy,t88,p6e,l4k,h2q,dj8,axm,8bq,5q4,348;1ykk,1l2g,tqk,poq,lmw,hl2,dv6,b9a,8no,61s,3g6;1zw2,1mdy,uyg,q72,m58,i3e,e6u,bl8,8zc,6dq,3ru;21mu,1npg,w8a,qpe,mnk,ilq,ejw,bww,9ba,6pe,43s;23iw,1p18,xi4,r7q,n5w,j42,f28,c8u,9my,71c,4fg;25eo,1qcq,yry,rps,nny,jm4,fka,cki,9ym,7d0,4r4;27aq,1ro8,101s,s84,o6a,k4g,g2m,cw6,aak,7oo,532;296i,1szq,11bm,sqg,oom,kms,gky,d84,am8,80m,5eq;2b2k,1ub8,12j8,t7y,p64,l4a,h2g,dj8,axm,8bq,5q4;2cyc,1vmq,13qu,tpg,pnm,lls,hjy,dum,b8q,8n4,618;2eue,1wyi,14y6,utq,q54,m3a,i1g,e5q,bju,8y8,6cc;2gq6,1ya0,165s,w12,qmc,mki,iio,egu,buy,99c,6ng;2im8,1zli,17d4,x8o,r3u,n20,j06,eyc,c6c,9kg,6yu;2ki0,217k,18kq,yg0,rl2,nj8,jhe,ffk,chg,9vk,79y;2me2,233m,19s2,znm,s2k,o0q,jyw,fx2,csk,a6y,7l2;2o9u,24ze,1azo,10uy,sk2,oi8,kge,gek,d3o,ai2,7w6;2q5w,26vg,1c70,122k,t1a,ozg,kxm,gvs,df2,at6,87k;2s1o,28r8,1dem,139w,tis,pgy,lf4,hda,dq6,b4a,8io;2txq,2ana,1ely,14h8,ucs,py6,lwc,hui,e1a,bfo,8ts;2vti,2cj2,1fta,15ou,vk4,qfo,mdu,ic0,ece,bqs,94w;2xpk,2ef4,1h0w,16w6,wrq,qww,mv2,it8,ere,c1w,9ga;2zlc,2gaw,1i88,183s,xz2,ree,nck,jaq,f8w,cd0,9re;31he,2i6y,1jfu,19b4,z6o,rvw,nu2,js8,fqe,co4,a2i;33d6,2k2q,1kn6,1aiq,10e0,sd4,oba,k9g,g7m,czi,adm;3598,2lys,1lus,1bq2,11lm,sum,oss,kqy,gp4,dam,aoq;3750,2nuk,1n24,1cxo,12sy,tbu,pa0,l86,h6c,dlq,b04;3912,2pqm,1o9q,1e50,140k,tvu,pri,lpo,hnu,dwu,bb8;3awu,2rme,1ph2,1fcm,157w,v3g,q90,m76,i5c,e88,bmc;3csw,2tig,1qoe,1gjy,16f8,was,qq8,moe,imk,ekq,bxg;3ihc,2x0a,1t0k,1ivu,18re,ymo,rnu,nm0,jk6,fic,cj4;3kji,2z1w,1uc2,1k7m,1a2w,zyg,s70,o56,k3c,g1i,cvc;3mlo,313s,1vnk,1lj4,1bee,119y,spw,oo2,km8,gke,d7k;3onu,335e,1wz2,1mum,1cpw,12lg,t8s,p6y,l54,h3a,djs;3qq0,357a,1yak,1o64,1e1e,13wy,ts8,pq4,loa,hmg,dw0;3ss6,378w,1zmc,1phm,1fd6,158g,v40,q90,m76,i5c,e88;3uuc,39as,218o,1qt4,1goo,16jy,wfi,qs6,mqc,ioi,emo;3wwi,3bce,234q,1s4m,1i06,17vg,xr0,rb2,n98,j7e,f5k;3yyo,3dea,250i,1tge,1jbo,1978,z2i,ru8,nse,jqk,foq;410u,3ffw,26wk,1urw,1kn6,1aiq,10e0,sd4,oba,k9g,g7m;4330,3hhs,28sc,1w3e,1lyo,1bu8,11pi,swa,oug,ksm,gqs;4556,3jje,2aoe,1xew,1nag,1d5q,131a,tf6,pdc,lbi,h9o;477c,3lla,2ck6,1yqe,1oly,1eh8,14cs,u82,pwi,luo,hsu;499i,3nmw,2eg8,201w,1pxg,1fsq,15oa,vjk,qfe,mdk,ibq;4bbo,3pos,2gc0,21v6,1r8y,1h48,16zs,wv2,qya,mwg,ium;4ddu,3rqe,2i82,23r8,1skg,1ig0,18ba,y6u,rhg,nfm,jds;4fg0,3tsa,2k3u,25n0,1tvy,1jri,19ms,zic,s0c,nyi,jwo;4hi6,3vtw,2lzw,27j2,1v7g,1l30,1aya,10tu,sji,oho,kfu;4jkc,3xvs,2nvo,29eu,1wj8,1mei,1ca2,125c,t2e,p0k,kyq;4lmi,3zxe,2prq,2baw,1xuq,1nq0,1dlk,13gu,tlk,pjq,lhw;4noo,41za,2rni,2d6o,1z68,1p1i,1ex2,14sc,unw,q2m,m0s;4pqu,440w,2tjk,2f2q,20lw,1qda,1g8k,1644,vze,qls,mjy;4rt0,462s,2vfc,2gyi,22ho,1ros,1hk2,17fm,xaw,r4o,n2u;4tv6,484e,2xbe,2iuk,24dq,1t0a,1ivk,18r4,yme,rnu,nm0;4vxc,4a6a,2z76,2kqc,269i,1ubs,1k72,1a2m,zxw,s6q,o4w;4xzi,4c7w,3138,2mme,285k,1vna,1liu,1be4,119o,spw,oo2;501o,4e9s,32z0,2oi6,2a1c,1wys,1muc,1cpm,12l6,t8s,p6y;523u,4gbe,34v2,2qe8,2bxe,1yaa,1o5u,1e14,13wo,try,ppu;5460,4ida,36qu,2sa0,2dt6,1zm2,1phc,1fcw,1586,v3q,q90;5686,4kew,38mw,2u62,2fp8,218e,1qsu,1goe,16jo,wf8,qrw;58ac,4mgs,3aio,2w1u,2hl0,2346,1s4c,1hzw,17v6,xqq,rb2;5aci,4oie,3ceq,2xxw,2jh2,2508,1tg4,1jbe,196y,z28,rty;5ceo,4qka,3eai,2zto,2lcu,26w0,1urm,1kmw,1aig,10dq,sd4;5egu,4slw,3g6k,31pq,2n8w,28s2,1w34,1lye,1bty,11p8,sw0;5gj0,4uns,3i2c,33li,2p4o,2anu,1xem,1n9w,1d5g,130q,tf6;5il6,4wpe,3jye,35hk,2r0q,2cjw,1yq4,1olo,1egy,14ci,u7s;5knc,4yra,3lu6,37dc,2swi,2efo,201m,1px6,1fsg,15o0,vja;5mt4,50ws,3ntu,39d0,2uw6,2gfc,21yi,1rb6,1h6q,1720,wxk;5oz6,532a,3pti,3bco,2wvu,2if0,23y6,1spg,1ikq,18ga,ybk;5r4y,557s,3rt6,3dcc,2yvi,2keo,25xu,1u3q,1jz0,19uk,zpu;5tb0,57da,3tsu,3fc0,30v6,2mec,27xi,1vhq,1lda,1b8k,1144;5xe8,5bg8,3xpy,3j94,34sa,2qbg,2bum,1xds,1mra,1cmu,12i4;5zka,5dlq,3zpm,3l8s,36ry,2sb4,2dua,1zdg,1o5k,1e0u,13we;61q2,5fr8,41pa,3n8g,38rm,2uas,2fty,21d4,1pjk,1ff4,15ae;63w4,5hwq,43oy,3p84,3ara,2wag,2htm,23cs,1qxu,1gte,16oo;661w,5k28,45om,3r7s,3cqy,2ya4,2jta,25cg,1sc4,1i7e,182y;687y,5m7q,47oa,3t7g,3eqm,309s,2lsy,27c4,1tq4,1jlo,19gy;6adq,5od8,49ny,3v74,3gqa,329g,2nsm,29bs,1v4e,1kzo,1av8;6cjs,5qiq,4bnm,3x6s,3ipy,3494,2psa,2bbg,1wum,1mdy,1c98;6epk,5so8,4dna,3z6g,3kpm,368s,2rry,2db4,1yua,1ns8,1dni;6gvm,5utq,4fmy,4164,3mpa,388g,2trm,2fas,20ty,1p68,1f1s;6j1e,5wz8,4hmm,435s,3ooy,3a84,2vra,2hag,22tm,1qki,1gfs;6l7g,5z4q,4jma,455g,3qom,3c7s,2xqy,2ja4,24ta,1ryi,1hu2;6nd8,61a8,4lly,4754,3soa,3e7g,2zqm,2l9s,26sy,1tcs,1j82;6pja,63fq,4nlm,494s,3uny,3g74,31qa,2n9g,28sm,1ur2,1kmc;6rp2,65l8,4pla,4b4g,3wnm,3i6s,33py,2p94,2asa,1wbg,1m0m;6tv4,67qq,4rky,4d44,3yna,3k6g,35pm,2r8s,2cry,1yb4,1nem;6w0w,69w8,4tkm,4f3s,40my,3m64,37pa,2t8g,2erm,20as,1osw;6y6y,6c1q,4vka,4h3g,42mm,3o5s,39oy,2v84,2gra,22ag,1q6w;70cq,6e78,4xjy,4j34,44ma,3q5g,3bom,2x7s,2iqy,24a4,1rl6;72is,6gcq,4zjm,4l2s,46ly,3s54,3doa,2z7g,2kqm,269s,1szg;74ok,6ii8,51ja,4n2g,48lm,3u4s,3fny,3174,2mqa,289g,1udg;76um,6knq,53iy,4p24,4ala,3w4g,3hnm,336s,2opy,2a94,1vsa;790e,6mt8,55im,4r1s,4cky,3y44,3jna,356g,2qpm,2c8s,1xry;7b6g,6oyq,57ia,4t1g,4ekm,403s,3lmy,3764,2spa,2e8g,1zrm;7dc8,6r48,59hy,4v14,4gka,423g,3nmm,395s,2uoy,2g84,21ra;7fia,6t9q,5bhm,4x0s,4ijy,4434,3pma,3b5g,2wom,2i7s,23qy;7ho2,6vf8,5dha,4z0g,4kjm,462s,3rly,3d54,2yoa,2k7g,25qm;7ju4,6xkq,5fgy,5104,4mja,482g,3tlm,3f4s,30ny,2m74,27qa;7lzw,6zq8,5hgm,52zs,4oiy,4a24,3vla,3h4g,32nm,2o6s,29py;7o5y,71vq,5jga,54zg,4qim,4c1s,3xky,3j44,34na,2q6g,2bpm;7qbq,7418,5lfy,56z4,4sia,4e1g,3zkm,3l3s,36my,2s64,2dpa;7shs,766q,5nfm,58ys,4uhy,4g14,41ka,3n3g,38mm,2u5s,2foy;7unk,78c8,5pfa,5ayg,4whm,4i0s,43jy,3p34,3ama,2w5g,2hom;7wtm,7ahq,5rey,5cy4,4yha,4k0g,45jm,3r2s,3cly,2y54,2joa;7yze,7cn8,5tem,5exs,50gy,4m04,47ja,3t2g,3elm,304s,2lny;815g,7esq,5vea,5gxg,52gm,4nzs,49iy,3v24,3gla,324g,2nnm;83b8,7gy8,5xdy,5ix4,54ga,4pzg,4bim,3x1s,3iky,3444,2pna;85ha,7j3q,5zdm,5kws,56fy,4rz4,4dia,3z1g,3kkm,363s,2rmy;87n2,7l98,61da,5mwg,58fm,4tys,4fhy,4114,3mka,383g,2tmm;89t4,7neq,63cy,5ow4,5afa,4vyg,4hhm,430s,3ojy,3a34,2vma;8byw,7pk8,65cm,5qvs,5cey,4xy4,4jha,450g,3qjm,3c2s,2xly;8e4y,7rpq,67ca,5svg,5eem,4zxs,4lgy,4704,3sja,3e2g,2zlm;8gaq,7tv8,69by,5uv4,5gea,51xg,4ngm,48zs,3uiy,3g24,31la;8igs,7w0q,6bbm,5wus,5idy,53x4,4pga,4azg,3wim,3i1s,33ky;8kmk,7y68,6dba,5yug,5kdm,55ws,4rfy,4cz4,3yia,3k1g,35km;8msm,80bq,6fay,60u4,5mda,57wg,4tfm,4eys,40hy,3m14,37ka;8oye,82h8,6ham,62ts,5ocy,59w4,4vfa,4gyg,42hm,3o0s,39jy;8r4g,84mq,6jaa,64tg,5qcm,5bvs,4xey,4iy4,44ha,3q0g,3bjm;8ta8,86s8,6l9y,66t4,5sca,5dvg,4zem,4kxs,46gy,3s04,3dja;8vga,88xq,6n9m,68ss,5uby,5fv4,51ea,4mxg,48gm,3tzs,3fiy;8xm2,8b38,6p9a,6asg,5wbm,5hus,53dy,4ox4,4aga,3vzg,3him;8zs4,8d8q,6r8y,6cs4,5yba,5jug,55dm,4qws,4cfy,3xz4,3jia;91xw,8fe8,6t8m,6ers,60ay,5lu4,57da,4swg,4efm,3zys,3lhy;943y,8hjq,6v8a,6grg,62am,5nts,59cy,4uw4,4gfa,41yg,3nhm;969q,8jp8,6x7y,6ir4,64aa,5ptg,5bcm,4wvs,4iey,43y4,3pha;98fs,8luq,6z7m,6kqs,669y,5rt4,5dca,4yvg,4kem,45xs,3rgy;9alk,8o08,717a,6mqg,689m,5tss,5fby,50v4,4mea,47xg,3tgm;9crm,8q5q,736y,6oq4,6a9a,5vsg,5hbm,52us,4ody,49x4,3vga;9exe,8sb8,756m,6qps,6c8y,5xs4,5jba,54ug,4qdm,4bws,3xfy;9h3g,8ugq,776a,6spg,6e8m,5zrs,5lay,56u4,4sda,4dwg,3zfm;9j98,8wm8,795y,6up4,6g8a,61rg,5nam,58ts,4ucy,4fw4,41fa;9lfa,8yrq,7b5m,6wos,6i7y,63r4,5paa,5atg,4wcm,4hvs,43ey;9nl2,90x8,7d5a,6yog,6k7m,65qs,5r9y,5ct4,4yca,4jvg,45em;a2y4,9ga0,7z44,7kna,766g,6rpm,6d8s,5yry,5kb4,55ua,4rdg;a72g,9kds,832w,7om2,7a58,6voe,6h7k,62qq,5o9w,59t2,4vc8;a9cy,9mk4,8548,7qne,7c6k,6xpq,6j8w,64s2,5qb8,5bue,4xdk;acus,9oqg,875k,7soq,7e7w,6zr2,6la8,66te,5sck,5dvq,4zew;agcw,9qws,896w,7uq2,7g98,71se,6nbk,68uq,5udw,5fx2,51g8;ajv0,9t34,8b88,7wre,7iak,73tq,6pcw,6aw2,5wf8,5hye,53hk;ancu,9v9g,8d9k,7ysq,7kbw,75v2,6re8,6cxe,5ygk,5jzq,55iw;aquy,9xfs,8faw,80u2,7md8,77we,6tfk,6eyq,60hw,5m12,57k8;aucs,9zm4,8hc8,82ve,7oek,79xq,6vgw,6h02,62j8,5o2e,59lk;axuw,a1sg,8jdk,84wq,7qfw,7bz2,6xi8,6j1e,64kk,5q3q,5bmw;b1d0,a3ys,8lew,86y2,7sh8,7e0e,6zjk,6l2q,66lw,5s52,5do8;b4uu,a654,8ng8,88ze,7uik,7g1q,71kw,6n42,68n8,5u6e,5fpk;b8cy,a8bg,8phk,8b0q,7wjw,7i32,73m8,6p5e,6aok,5w7q,5hqw;bbus,abc2,8riw,8d22,7yl8,7k4e,75nk,6r6q,6cpw,5y92,5js8;bfcw,aetc,8tk8,8f3e,80mk,7m5q,77ow,6t82,6er8,60ae,5ltk;biv0,aiaw,8vlk,8h4q,82nw,7o72,79q8,6v9e,6gsk,62bq,5nuw;bmcu,als6,8xmw,8j62,84p8,7q8e,7brk,6xaq,6itw,64d2,5pw8;bpuy,ap9g,8zo8,8l7e,86qk,7s9q,7dsw,6zc2,6kv8,66ee,5rxk;btcs,asqq,91pk,8n8q,88rw,7ub2,7fu8,71de,6mwk,68fq,5tyw;bwuw,aw80,93qw,8pa2,8at8,7wce,7hvk,73eq,6oxw,6ah2,5w08;c0d0,azpk,95s8,8rbe,8cuk,7ydq,7jww,75g2,6qz8,6cie,5y1k;c3uu,b36u,97tk,8tcq,8evw,80f2,7ly8,77he,6t0k,6ejq,602w;c7cy,b6o4,99uw,8ve2,8gx8,82ge,7nzk,79iq,6v1w,6gl2,6248;caus,ba5e,9bw8,8xfe,8iyk,84hq,7q0w,7bk2,6x38,6ime,645k;cecw,bdmo,9dxk,8zgq,8kzw,86j2,7s28,7dle,6z4k,6knq,666w;chv0,bh48,9fyw,91i2,8n18,88ke,7u3k,7fmq,715w,6mp2,6888;clcu,bkli,9i08,93je,8p2k,8alq,7w4w,7ho2,7378,6oqe,6a9k;couy,bo2s,9k1k,95kq,8r3w,8cn2,7y68,7jpe,758k,6qrq,6caw;cscs,brk2,9m2w,97m2,8t58,8eoe,807k,7lqq,779w,6st2,6ec8;cvuw,bv1c,9o48,99ne,8v6k,8gpq,828w,7ns2,79b8,6uue,6gdk;czd0,byiw,9q5k,9boq,8x7w,8ir2,84a8,7pte,7bck,6wvq,6iew;d2uu,c206,9s6w,9dq2,8z98,8kse,86bk,7ruq,7ddw,6yx2,6kg8;d6cy,c5hg,9u88,9fre,91ak,8mtq,88cw,7tw2,7ff8,70ye,6mhk;d9us,c8yq,9w9k,9hsq,93bw,8ov2,8ae8,7vxe,7hgk,72zq,6oiw;ddcw,ccg0,9yaw,9ju2,95d8,8qwe,8cfk,7xyq,7jhw,7512,6qk8;dgv0,cfxk,a0c8,9lve,97ek,8sxq,8egw,8002,7lj8,772e,6slk;dkcu,cjeu,a2dk,9nwq,99fw,8uz2,8gi8,821e,7nkk,793q,6umw;dnuy,cmw4,a4ew,9py2,9bh8,8x0e,8ijk,842q,7plw,7b52,6wo8;drcs,cqde,a6g8,9rze,9dik,8z1q,8kkw,8642,7rn8,7d6e,6ypk;duuw,ctuo,a8hk,9u0q,9fjw,9132,8mm8,885e,7tok,7f7q,70qw;dyd0,cxc8,abe0,9w22,9hl8,934e,8onk,8a6q,7vpw,7h92,72s8;e1uu,d0ti,aen8,9y3e,9jmk,955q,8qow,8c82,7xr8,7jae,74tk;e5cy,d4as,ahwg,a04q,9lnw,9772,8sq8,8e9e,7zsk,7lbq,76uw;e8us,d7s2,al5y,a262,9np8,998e,8urk,8gaq,81tw,7nd2,78w8;eccw,db9c,aof6,a47e,9pqk,9b9q,8wsw,8ic2,83v8,7pee,7axk;efv0,deqw,aroo,a68q,9rrw,9db2,8yu8,8kde,85wk,7rfq,7cyw;ejcu,di86,auxw,a8a2,9tt8,9fce,90vk,8meq,87xw,7th2,7f08;emuy,dlpg,ay74,ab1s,9vuk,9hdq,92ww,8og2,89z8,7vie,7h1k;eqcs,dp6q,b1gm,aeba,9xvw,9jf2,94y8,8qhe,8c0k,7xjq,7j2w;etuw,dso0,b4pu,ahki,9zx8,9lge,96zk,8siq,8e1w,7zl2,7l48;exd0,dw5k,b7zc,aku0,a1yk,9nhq,990w,8uk2,8g38,81me,7n5k;f0uu,dzmu,bb8k,ao38,a3zw,9pj2,9b28,8wle,8i4k,83nq,7p6w;f4cy,e344,behs,arcg,a618,9rke,9d3k,8ymq,8k5w,85p2,7r88;f7us,e6le,bhra,auly,a82k,9tlq,9f4w,90o2,8m78,87qe,7t9k;fbcw,ea2o,bl0i,axv6,aapu,9vn2,9h68,92pe,8o8k,89rq,7vaw;fev0,edk8,boa0,b14o,adzc,9xoe,9j7k,94qq,8q9w,8bt2,7xc8;ficu,eh1i,brj8,b4dw,ah8k,9zpq,9l8w,96s2,8sb8,8due,7zdk;fluy,ekis,busg,b7n4,akhs,a1r2,9na8,98te,8uck,8fvq,81ew;fpcs,eo02,by1y,bawm,anra,a3se,9pbk,9auq,8wdw,8hx2,83g8;fsuw,erhc,c1b6,be5u,ar0i,a5tq,9rcw,9cw2,8yf8,8jye,85hk;fwd0,euyw,c4ko,bhfc,aua0,a7v2,9te8,9exe,90gk,8lzq,87iw;fzuu,eyg6,c7tw,bkok,axj8,aadw,9vfk,9gyq,92hw,8o12,89k8;g3cy,f1xg,cb34,bnxs,b0sg,adn4,9xgw,9j02,94j8,8q2e,8blk;g6us,f5eq,cecm,br7a,b41y,agwm,9zi8,9l1e,96kk,8s3q,8dmw;gacw,f8w0,chlu,bugi,b7b6,ak5u,a1jk,9n2q,98lw,8u52,8fo8;gdv0,fcdk,ckvc,bxq0,bako,anfc,a3kw,9p42,9an8,8w6e,8hpk;ghcu,ffuu,co4k,c0z8,bdtw,aqok,a5m8,9r5e,9cok,8y7q,8jqw;gkuy,fjc4,crds,c48g,bh34,atxs,a7nk,9t6q,9epw,9092,8ls8;gocs,fmte,cuna,c7hy,bkcm,ax7a,aa1y,9v82,9gr8,92ae,8ntk;gruw,fqao,cxwi,car6,bnlu,b0gi,adb6,9x9e,9isk,94bq,8puw;gvd0,fts8,d160,ce0o,bqvc,b3q0,agko,9zaq,9ktw,96d2,8rw8;gyuu,fx9i,d4f8,ch9w,bu4k,b6z8,ajtw,a1c2,9mv8,98ee,8txk;h2cy,g0qs,d7og,ckj4,bxds,ba8g,an34,a3de,9owk,9afq,8vyw;h5us,g482,daxy,cnsm,c0na,bdhy,aqcm,a5eq,9qxw,9ch2,8y08;h9cw,g7pc,de76,cr1u,c3wi,bgr6,atlu,a7g2,9sz8,9eie,901k;hcv0,gb6w,dhgo,cubc,c760,bk0o,awvc,a9q0,9v0k,9gjq,922w;hgcu,geo6,dkpw,cxkk,caf8,bn9w,b04k,acz8,9x1w,9il2,9448;hjuy,gi5g,dnz4,d0ts,cdog,bqj4,b3ds,ag8g,9z38,9kme,965k;hncs,glmq,dr8m,d43a,cgxy,btsm,b6na,ajhy,a14k,9mnq,986w;hquw,gp40,duhu,d7ci,ck76,bx1u,b9wi,amr6,a35w,9op2,9a88;hud0,gslk,dxrc,dam0,cngo,c0bc,bd60,aq0o,a578,9qqe,9c9k;hxuu,gw2u,e10k,ddv8,cqpw,c3kk,bgf8,at9w,a78k,9srq,9eaw;i1cy,gzk4,e49s,dh4g,ctz4,c6ts,bjog,awj4,a9ds,9ut2,9gc8;i4us,h31e,e7ja,dkdy,cx8m,ca3a,bmxy,azsm,acna,9wue,9idk;i8cw,h6io,easi,dnn6,d0hu,cdci,bq76,b31u,afwi,9yvq,9kew;ibv0,ha08,ee20,dqwo,d3rc,cgm0,btgo,b6bc,aj60,a0x2,9mg8;ifcu,hdhi,ehb8,du5w,d70k,cjv8,bwpw,b9kk,amf8,a2ye,9ohk;iiuy,hgys,ekkg,dxf4,da9s,cn4g,bzz4,bcts,apog,a4zq,9qiw;imcs,hkg2,enty,e0om,ddja,cqdy,c38m,bg3a,asxy,a712,9sk8;ipuw,hnxc,er36,e3xu,dgsi,ctn6,c6hu,bjci,aw76,a92e,9ulk;itd0,hrew,euco,e77c,dk20,cwwo,c9rc,bmm0,azgo,acbc,9wmw;iwuu,huw6,exlw,eagk,dnb8,d05w,cd0k,bpv8,b2pw,afkk,9yo8;j0cy,hydg,f0v4,edps,dqkg,d3f4,cg9s,bt4g,b5z4,aits,a0pk;j3us,i1uq,f44m,egza,dtty,d6om,cjja,bwdy,b98m,am3a,a2qw;j7cw,i5c0,f7du,ek8i,dx36,d9xu,cmsi,bzn6,bchu,apci,a4s8;jav0,i8tk,fanc,eni0,e0co,dd7c,cq20,c2wo,bfrc,asm0,a6tk;jecu,icau,fdwk,eqr8,e3lw,dggk,ctb8,c65w,bj0k,avv8,a8uw;jhuy,ifs4,fh5s,eu0g,e6v4,djps,cwkg,c9f4,bm9s,az4g,abz4;jlcs,ij9e,fkfa,ex9y,ea4m,dmza,czty,ccom,bpja,b2dy,af8m;jouw,imqo,fnoi,f0j6,eddu,dq8i,d336,cfxu,bssi,b5n6,aihu;jsd0,iq88,fqy0,f3so,egnc,dti0,d6co,cj7c,bw20,b8wo,alrc;jvuu,itpi,fu78,f71w,ejwk,dwr8,d9lw,cmgk,bzb8,bc5w,ap0k;jzcy,ix6s,fxgg,fab4,en5s,e00g,dcv4,cpps,c2kg,bff4,as9s;k2us,j0o2,g0py,fdkm,eqfa,e39y,dg4m,csza,c5ty,biom,avja;k6cw,j45c,g3z6,fgtu,etoi,e6j6,djdu,cw8i,c936,blxu,aysi;k9v0,j7mw,g78o,fk3c,ewy0,e9so,dmnc,czi0,ccco,bp7c,b220;kdcu,jb46,gahw,fnck,f078,ed1w,dpwk,d2r8,cflw,bsgk,b5b8;kguy,jelg,gdr4,fqls,f3gg,egb4,dt5s,d60g,civ4,bvps,b8kg;kkcs,ji2q,gh0m,ftva,f6py,ejkm,dwfa,d99y,cm4m,byza,bbty;knuw,jlk0,gk9u,fx4i,f9z6,emtu,dzoi,dcj6,cpdu,c28i,bf36;krd0,jp1k,gnjc,g0e0,fd8o,eq3c,e2y0,dfso,csnc,c5i0,bico;kuuu,jsiu,gqsk,g3n8,fghw,etck,e678,dj1w,cvwk,c8r8,bllw;kycy,jw04,gu1s,g6wg,fjr4,ewls,e9gg,dmb4,cz5s,cc0g,bov4;l1us,jzhe,gxba,ga5y,fn0m,ezva,ecpy,dpkm,d2fa,cf9y,bs4m;l5cw,k2yo,h0ki,gdf6,fq9u,f34i,efz6,dstu,d5oi,cij6,bvdu;l8v0,k6g8,h3u0,ggoo,ftjc,f6e0,ej8o,dw3c,d8y0,clso,bync;lccu,k9xi,h738,gjxw,fwsk,f9n8,emhw,dzck,dc78,cp1w,c1wk;lfuy,kdes,hacg,gn74,g01s,fcwg,epr4,e2ls,dfgg,csb4,c55s;ljcs,kgw2,hdly,gqgm,g3ba,fg5y,et0m,e5va,dipy,cvkm,c8fa;lmuw,kkdc,hgv6,gtpu,g6ki,fjf6,ew9u,e94i,dlz6,cytu,cboi;lqd0,knuw,hk4o,gwzc,g9u0,fmoo,ezjc,ece0,dp8o,d23c,cey0;ltuu,krc6,hndw,h08k,gd38,fpxw,f2sk,efn8,dshw,d5ck,ci78;lxcy,kutg,hqn4,h3hs,ggcg,ft74,f61s,eiwg,dvr4,d8ls,clgg;m0us,kyaq,htwm,h6ra,gjly,fwgm,f9ba,em5y,dz0m,dbva,copy;m4cw,l1s0,hx5u,ha0i,gmv6,fzpu,fcki,epf6,e29u,df4i,crz6;m7yc,l5cw,i0io,hddc,gq80,g32o,ffxc,ess0,e5mo,dihc,cvc0;mbkc,l8y2,i3vs,hgqg,gtl4,g6fs,fjag,ew54,e8zs,dlug,cyp4;mf6c,lcji,i796,hk3u,gwyi,g9t6,fmnu,ezii,ecd6,dp7u,d22i;misc,lg4o,iamk,hnh8,h0bw,gd6k,fq18,f2vw,efqk,dsl8,d5fw;mmec,ljq4,idzy,hqum,h3pa,ggjy,ftem,f69a,ej3y,dvym,d8ta;mq0c,lnbk,ihdc,hu80,h72o,gjxc,fws0,f9mo,emhc,dzc0,dc6o;mtmc,lqwq,ikqg,hxl4,hafs,gnag,g054,fczs,epug,e2p4,dfjs;mx8c,lui6,io3u,i0yi,hdt6,gqnu,g3ii,fgd6,et7u,e62i,dix6;n0uc,ly3c,irh8,i4bw,hh6k,gu18,g6vw,fjqk,ewl8,e9fw,dmak;n4gc,m1os,iuum,i7pa,hkjy,gxem,ga9a,fn3y,ezym,ecta,dpny;n82c,m5a8,iy80,ib2o,hnxc,h0s0,gdmo,fqhc,f3c0,eg6o,dt1c;nboc,m8ve,j1l4,iefs,hrag,h454,ggzs,ftug,f6p4,ejjs,dweg;nfac,mcgu,j4yi,iht6,hunu,h7ii,gkd6,fx7u,fa2i,emx6,dzru;niwc,mg20,j8bw,il6k,hy18,havw,gnqk,g0l8,fdfw,eqak,e358;nmic,mjng,jbpa,iojy,i1em,he9a,gr3y,g3ym,fgta,etny,e6im;nq4c,mn8w,jf2o,irxc,i4s0,hhmo,guhc,g7c0,fk6o,ex1c,e9w0;ntqc,mqu2,jifs,ivag,i854,hkzs,gxug,gap4,fnjs,f0eg,ed94;nxcc,mufi,jlt6,iynu,ibii,hod6,h17u,ge2i,fqx6,f3ru,egmi;o0yc,my0o,jp6k,j218,ievw,hrqk,h4l8,ghfw,fuak,f758,ejzw;o4kc,n1m4,jsjy,j5em,ii9a,hv3y,h7ym,gkta,fxny,faim,enda;o86c,n57k,jvxc,j8s0,ilmo,hyhc,hbc0,go6o,g11c,fdw0,eqqo;obsc,n8sq,jzag,jc54,iozs,i1ug,hep4,grjs,g4eg,fh94,eu3s;ofec,nce6,k2nu,jfii,isd6,i57u,hi2i,gux6,g7ru,fkmi,exh6;oj0c,nfzc,k618,jivw,ivqk,i8l8,hlfw,gyak,gb58,fnzw,f0uk;ommc,njks,k9em,jm9a,iz3y,ibym,hota,h1ny,geim,frda,f47y;oq8c,nn68,kcs0,jpmo,j2hc,ifc0,hs6o,h51c,ghw0,fuqo,f7lc;otuc,nqre,kg54,jszs,j5ug,iip4,hvjs,h8eg,gl94,fy3s,fayg;oxgc,nucu,kjii,jwd6,j97u,im2i,hyx6,hbru,gomi,g1h6,febu;p12c,nxy0,kmvw,jzqk,jcl8,ipfw,i2ak,hf58,grzw,g4uk,fhp8;p4oc,o1jg,kq9a,k33y,jfym,ista,i5ny,hiim,gvda,g87y,fl2m;p8ac,o54w,ktmo,k6hc,jjc0,iw6o,i91c,hlw0,gyqo,gblc,fog0;pbwc,o8q2,kwzs,k9ug,jmp4,izjs,iceg,hp94,h23s,geyg,frt4;pfic,ocbi,l0d6,kd7u,jq2i,j2x6,ifru,hsmi,h5h6,gibu,fv6i;pj4c,ofwo,l3qk,kgl8,jtfw,j6ak,ij58,hvzw,h8uk,glp8,fyjw;pmqc,oji4,l73y,kjym,jwta,j9ny,imim,hzda,hc7y,gp2m,g1xa;pqcc,on3k,lahc,knc0,k06o,jd1c,ipw0,i2qo,hflc,gsg0,g5ao;ptyc,oqoq,ldug,kqp4,k3js,jgeg,it94,i63s,hiyg,gvt4,g8ns;pxkc,oua6,lh7u,ku2i,k6x6,jjru,iwmi,i9h6,hmbu,gz6i,gc16;q16c,oxvc,lkl8,kxfw,kaak,jn58,izzw,icuk,hpp8,h2jw,gfek;q4sc,p1gs,lnym,l0ta,kdny,jqim,j3da,ig7y,ht2m,h5xa,giry;q8ec,p528,lrc0,l46o,kh1c,jtw0,j6qo,ijlc,hwg0,h9ao,gm5c;qc0c,p8ne,lup4,l7js,kkeg,jx94,ja3s,imyg,hzt4,hcns,gpig;qfmc,pc8u,ly2i,lax6,knru,k0mi,jdh6,iqbu,i36i,hg16,gsvu;qj8c,pfu0,m1fw,leak,kr58,k3zw,jguk,itp8,i6jw,hjek,gw98;qodc,pjfg,m4ta,lhny,kuim,k7da,jk7y,ix2m,i9xa,hmry,gzmm;qtn2,pn0w,m86o,ll1c,kxw0,kaqo,jnlc,j0g0,idao,hq5c,h300;qywi,pqm2,mbjs,loeg,l194,ke3s,jqyg,j3t4,igns,htig,h6d4;r468,pu7i,mex6,lrru,l4mi,khh6,jubu,j76i,ik16,hwvu,h9qi;r9fo,pxso,miak,lv58,l7zw,kkuk,jxp8,jajw,inek,i098,hd3w;repe,q1e4,mlny,lyim,lbda,ko7y,k12m,jdxa,iqry,i3mm,hgha;rjyu,q4zk,mp1c,m1w0,leqo,krlc,k4g0,jhao,iu5c,i700,hjuo;rp8k,q8kq,mseg,m594,li3s,kuyg,k7t4,jkns,ixig,iad4,hn7s;rui0,qc66,mvru,m8mi,llh6,kybu,kb6i,jo16,j0vu,idqi,hql6;rzrq,qfrc,mz58,mbzw,louk,l1p8,kejw,jrek,j498,ih3w,htyk;s516,qjcs,n2im,mfda,ls7y,l52m,khxa,jury,j7mm,ikha,hxby;saaw,qoiw,n5w0,miqo,lvlc,l8g0,klao,jy5c,jb00,inuo,i0pc;sfkc,qtri,n994,mm3s,lyyg,lbt4,kons,k1ig,jed4,ir7s,i42g;sku2,qz04,ncmi,mph6,m2bu,lf6i,ks16,k4vu,jhqi,iul6,i7fu;sq3i,r48q,nfzw,msuk,m5p8,lijw,kvek,k898,jl3w,ixyk,iat8;svd8,r9hc,njda,mw7y,m92m,llxa,kyry,kbmm,joha,j1by,ie6m;t0mo,repy,nmqo,mzlc,mcg0,lpao,l25c,kf00,jruo,j4pc,ihk0;t5we,rjyk,nq3s,n2yg,mft4,lsns,l5ig,kid4,jv7s,j82g,ikx4;tb5u,rp76,nth6,n6bu,mj6i,lw16,l8vu,klqi,jyl6,jbfu,ioai;tgfk,rufs,nwuk,n9p8,mmjw,lzek,lc98,kp3w,k1yk,jet8,irnw;tlp0,rzoe,o07y,nd2m,mpxa,m2ry,lfmm,ksha,k5by,ji6m,iv1a;tqyq,s4x0,o3lc,ngg0,mtao,m65c,lj00,kvuo,k8pc,jlk0,iyeo;tw86,sa5m,o6yg,njt4,mwns,m9ig,lmd4,kz7s,kc2g,jox4,j1rs;u1hw,sfe8,oabu,nn6i,n016,mcvu,lpqi,l2l6,kffu,jsai,j556;u6rc,skmu,odp8,nqjw,n3ek,mg98,lt3w,l5yk,kit8,jvnw,j8ik;uc12,spvg,oh2m,ntxa,n6ry,mjmm,lwha,l9by,km6m,jz1a,jbvy;uhai,sv42,okg0,nxao,na5c,mn00,lzuo,lcpc,kpk0,k2eo,jf9c;umk8,t0co,ont4,o0ns,ndig,mqd4,m37s,lg2g,ksx4,k5rs,jimg;urto,t5la,or6i,o416,ngvu,mtqi,m6l6,ljfu,kwai,k956,jlzu;ux3e,tatw,oujw,o7ek,nk98,mx3w,m9yk,lmt8,kznw,kcik,jpd8;v2cu,tg2i,oxxa,oary,nnmm,n0ha,mdby,lq6m,l31a,kfvy,jsqm;v7mk,tlb4,p1ao,oe5c,nr00,n3uo,mgpc,ltk0,l6eo,kj9c,jw40;vcw0,tqjq,p4ns,ohig,nud4,n77s,mk2g,lwx4,l9rs,kmmg,jzh4;vi5q,tvsc,p816,okvu,nxqi,nal6,mnfu,m0ai,ld56,kpzu,k2ui;vxyc,ubi6,pi5c,ov00,o7uo,nkpc,mxk0,maeo,ln9c,l040,k9la;w382,ugqs,plig,oyd4,ob7s,no2g,n0x4,mdrs,lqmg,l3h4,kcyo;w8hi,ulze,povu,p1qi,oel6,nrfu,n4ai,mh56,ltzu,l6ui,kgbs;wb48,uolu,pqko,p3fc,oga0,nt4o,n5zc,miu0,lvoo,l8jc,kjp6'.split(';').map(r => r.split(',').map(v => v ? parseInt(v, 36) : 0));
+
+/* 간이세액표 조회: 월급여액(원) + 공제대상가족수 → 원천징수 소득세(원) */
+function simpleTax(monthly, fam, kids){
+  const k = monthly / 1000;                          // 천원 단위
+  if (k < TAX_BOUNDS[0]) return {tax:0, table:0, childCut:0, row:null, over:false};
+  const over = k >= TAX_BOUNDS[TAX_BOUNDS.length-1]; // 표 상한(9,980천원) 초과분은 별도 산식 구간
+  let lo = 0, hi = TAX_ROWS.length - 1, i = hi;
+  if (!over) {
+    while (lo <= hi) { const m = (lo+hi) >> 1;
+      if (k < TAX_BOUNDS[m]) hi = m-1; else if (k >= TAX_BOUNDS[m+1]) lo = m+1; else { i = m; break; } }
+  }
+  const col = Math.min(11, Math.max(1, fam)) - 1;
+  const table = TAX_ROWS[i][col];
+  const n = Math.max(0, kids|0);
+  const childCut = n === 0 ? 0 : n === 1 ? 20830 : 45830 + Math.max(0, n-2) * 33330;
+  return {tax: Math.max(0, table - childCut), table, childCut, over,
+          row: {from: TAX_BOUNDS[i], to: TAX_BOUNDS[i+1]}};
+}
+
+function payroll(e, ym, ov){
+  const base = BASE_PAY[e.grade] || 0;
+  const roleP = ROLE_PAY[e.role] || 0;
+  const yrs = Math.max(0, yearsBetween(e.join, ym + '-01'));   // 입사 전이면 0 (음수 근속수당 방지)
+  const senior = Math.min(300000, yrs * 30000);
+  const s = attSummary(e.id, ym);
+  const hourly = Math.round(base / 209);
+  const overtime = e.status === '재직' ? r10(hourly * 1.5 * s.ot) : 0;
+  const absentCut = e.status === '재직' ? r10(base / 30 * s.결근) : 0;
+  const onLeave = e.status !== '재직';
+  const fam = ov && ov.fam != null ? ov.fam : (e.fam || 1);
+  const kids = ov && ov.kids != null ? ov.kids : (e.kids || 0);
+
+  const gross = onLeave ? 0 : (base + roleP + senior + MEAL + overtime - absentCut);
+  const taxable = Math.max(0, gross - MEAL);           // 식대 비과세 제외 = 간이세액표의 "월급여액"
+
+  // 국민연금 기준소득월액: 상·하한 적용 후 1천원 미만 절사
+  const npBase = Math.floor(Math.min(Math.max(taxable, PENSION_FLOOR), PENSION_CAP) / 1000) * 1000;
+  const np  = onLeave ? 0 : r10(npBase * RATE.국민연금);
+  const hi  = r10(taxable * RATE.건강보험);
+  const ltc = r10(hi * RATE.장기요양);
+  const ei  = r10(taxable * RATE.고용보험);
+  const st  = simpleTax(taxable, fam, kids);
+  const it  = st.tax;
+  const lit = r10(it * 0.1);
+  const deduct = np + hi + ltc + ei + it + lit;
+
+  return {e, ym, base, roleP, senior, meal: onLeave?0:MEAL, overtime, absentCut, gross, taxable,
+          npBase, np, hi, ltc, ei, it, lit, st, fam, kids,
+          deduct, net: gross - deduct, otHours: s.ot, absent: s.결근, onLeave, yrs};
+}
+function payrollAll(ym){ return S.employees.filter(e => e.status !== '퇴사').map(e => payroll(e, ym)); }
+
+/* =====================================================================
+   화면 공통
+   ===================================================================== */
+let VIEW = 'dash';
+const UI = { empQ:'', empTeam:'', empStatus:'재직', attTeam:'', attDate:TODAY, payYm:'2026-09',
+             slipEmp:'HB-0002', slipOf:null, ovFam:null, ovKids:null,
+             leaveTab:'전체', stockCat:'', assetQ:'', roomDate:'2026-09-14', docKind:'' };
+const $ = s => document.querySelector(s);
+const M = () => $('#main');
+
+function head(title, desc){
+  return '<h1>' + esc(title) + ' <span class="badge-v">교육용 가상 자료</span></h1>'
+       + '<p class="desc">' + desc + '</p>';
+}
+function table(cols, rows){
+  let h = '<div class="scroll"><table><thead><tr>';
+  cols.forEach(c => h += '<th' + (c.num ? ' class="num"' : '') + '>' + esc(c.t) + '</th>');
+  h += '</tr></thead><tbody>';
+  if (!rows.length) h += '<tr><td colspan="' + cols.length + '" style="color:#999;text-align:center;padding:24px">해당 자료가 없습니다.</td></tr>';
+  rows.forEach(r => {
+    h += '<tr>';
+    cols.forEach((c,i) => h += '<td' + (c.num ? ' class="num"' : '') + '>' + (r[i] == null ? '' : r[i]) + '</td>');
+    h += '</tr>';
+  });
+  return h + '</tbody></table></div>';
+}
+function pill(txt){
+  const m = {'재직':'p-ok','승인':'p-ok','정상':'p-ok','사용중':'p-ok',
+             '퇴사':'p-bad','결근':'p-bad','반려':'p-bad','폐기대기':'p-bad',
+             '대기':'p-wait','지각':'p-wait','조퇴':'p-wait','수리중':'p-wait',
+             '휴직':'p-off','휴가':'p-off','반차':'p-off','보관중':'p-off','미입력':'p-off',
+             '휴가(예정)':'p-plan','예정':'p-plan'};
+  return '<span class="pill ' + (m[txt]||'p-off') + '">' + esc(txt) + '</span>';
+}
+function csv(filename, header, rows){
+  const lines = ['# 교육용 가상 자료 - 실제 인사정보 아님 (' + COMPANY + ', 기준일 ' + TODAY + ')'];
+  lines.push(header.join(','));
+  rows.forEach(r => lines.push(r.map(v => {
+    const s = String(v == null ? '' : v).replace(/<[^>]*>/g,'');
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+  }).join(',')));
+  const blob = new Blob(['﻿' + lines.join('\r\n')], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+function modal(title, bodyHtml, onOk, okLabel){
+  $('#modalHost').innerHTML =
+    '<div class="modal"><div class="inner"><h3>' + esc(title) + ' <span class="badge-v">가상</span></h3>'
+    + bodyHtml
+    + '<div class="right" style="margin-top:14px">'
+    + '<button class="ghost" onclick="closeModal()">닫기</button> '
+    + (onOk ? '<button id="mOk">' + esc(okLabel||'확인') + '</button>' : '')
+    + '</div></div></div>';
+  if (onOk) $('#mOk').onclick = onOk;
+}
+function closeModal(){ $('#modalHost').innerHTML = ''; }
+function go(v){ VIEW = v; render(); }
+
+function render(){
+  document.querySelectorAll('#side a').forEach(a => a.classList.toggle('on', a.dataset.v === VIEW));
+  _attCache = null;
+  (VIEWS[VIEW] || VIEWS.dash)();
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('#side a').forEach(a => a.onclick = () => go(a.dataset.v));
+
+/* =====================================================================
+   1. 대시보드
+   ===================================================================== */
+const VIEWS = {};
+VIEWS.dash = function(){
+  const act = activeEmps(), work = S.employees.filter(e => e.status === '재직');
+  const pending = S.leaves.filter(l => l.status === '대기');
+  const low = S.stock.filter(s => s.qty < s.safe);
+  const ym = '2026-09';
+  const pr = payrollAll(ym);
+  const totalNet = pr.reduce((s,p) => s + p.net, 0);
+  const thisMonthJoin = S.employees.filter(e => e.join.startsWith('2026'));
+  const att = attendance().filter(a => a.date.startsWith('2026-09'));
+  const late = att.filter(a => a.state === '지각').length;
+  const absent = att.filter(a => a.state === '결근').length;
+
+  let h = head('대시보드', COMPANY + ' · 기준일 ' + TODAY + '(월) · 인사총무팀 담당자 화면');
+  h += '<div class="warnbox"><b>교육용 안내</b> — 아래 수치는 모두 지어낸 가상 값입니다. 실제 회사의 인원·급여·재고와 무관합니다. 마음껏 눌러보고, 망가지면 왼쪽 아래 <b>데이터 초기화</b>를 누르세요.</div>';
+
+  h += '<div class="kpi k3">'
+    + kpi('재직 인원', work.length + '명', '휴직 ' + S.employees.filter(e=>e.status==='휴직').length + '명 · 퇴사 ' + S.employees.filter(e=>e.status==='퇴사').length + '명', 'lavender')
+    + kpi('결재 대기 휴가', pending.length + '건', '휴가 신청·결재 화면에서 처리', 'peach', pending.length > 0)
+    + kpi('안전재고 미달', low.length + '품목', low.length ? low.slice(0,2).map(s=>s.name).join(', ') + ' 등' : '이상 없음', 'ochre', low.length > 0)
+    + kpi('9월 실지급 합계', won(totalNet) + '원', '가상 계산값 · ' + pr.length + '명', 'teal')
+    + kpi('9월 지각/결근', late + '건 / ' + absent + '건', '2026-09-01 ~ 09-11 집계', 'coral', absent > 0)
+    + kpi('2026년 입사', thisMonthJoin.length + '명', '신규 입사자 온보딩 대상', 'mint')
+    + '</div>';
+
+  h += '<div class="row">';
+  h += '<div class="card"><h3>오늘의 할 일 (가상)</h3><ul style="margin:0;padding-left:18px">'
+    + '<li>휴가 결재 <b>' + pending.length + '건</b> 처리 — <a href="#" onclick="go(\'leave\');return false">휴가 신청·결재</a></li>'
+    + '<li>안전재고 미달 <b>' + low.length + '품목</b> 발주 품의 — <a href="#" onclick="go(\'stock\');return false">비품 재고</a></li>'
+    + '<li>9월 급여 검산 (지급일 09-25) — <a href="#" onclick="go(\'pay\');return false">급여대장</a></li>'
+    + '<li>추석 연휴(09-24~09-26) 근무 계획 공지 — <a href="#" onclick="go(\'doc\');return false">문서 대장</a></li>'
+    + '</ul></div>';
+
+  const byHq = {};
+  ORG.forEach(o => byHq[o.hq] = work.filter(e => e.hq === o.hq).length);
+  h += '<div class="card"><h3>본부별 재직 인원</h3>' + table(
+    [{t:'본부'},{t:'인원',num:true},{t:'비중',num:true}],
+    ORG.map(o => [o.hq, byHq[o.hq] + '명', Math.round(byHq[o.hq]/work.length*100) + '%'])
+  ) + '</div>';
+  h += '</div>';
+
+  h += '<div class="card"><h3>이번 주 회의실 예약 (가상)</h3>' + table(
+    [{t:'일자'},{t:'회의실'},{t:'시간'},{t:'안건'},{t:'예약자'}],
+    S.bookings.filter(b => b.date >= '2026-09-14' && b.date <= '2026-09-20')
+      .sort((a,b)=> (a.date+a.start) < (b.date+b.start) ? -1 : 1)
+      .map(b => [b.date + '(' + WD[d2(b.date).getDay()] + ')', b.room, b.start + '~' + b.end, esc(b.title), (emp(b.by)||{}).name || '-'])
+  ) + '</div>';
+  M().innerHTML = h;
+};
+/* KPI 카드 — design.md의 "피처 카드"를 쓰는 유일한 자리.
+   tone 은 색 이름(lavender/peach/ochre/teal/coral/mint), alert 는 문제 상태 테두리.
+   design.md는 색을 순환시키라고 하지만, 여기서는 색이 뜻을 갖도록 고정 매핑한다. */
+function kpi(l, v, s, tone, alert){
+  return '<div class="box' + (tone ? ' t-' + tone : '') + (alert ? ' alert' : '') + '">'
+    + '<div class="lbl">' + l + '</div><div class="val">' + v + '</div><div class="sub">' + s + '</div></div>';
+}
+
+/* =====================================================================
+   2. 사원명부
+   ===================================================================== */
+function teamOptions(sel){
+  let o = '';
+  ORG.forEach(g => { o += '<optgroup label="' + g.hq + '">';
+    g.teams.forEach(t => o += '<option' + (t===sel?' selected':'') + '>' + t + '</option>'); o += '</optgroup>'; });
+  return o;
+}
+function filteredEmps(){
+  return S.employees.filter(e =>
+    (!UI.empStatus || e.status === UI.empStatus) &&
+    (!UI.empTeam || e.team === UI.empTeam) &&
+    (!UI.empQ || e.name.includes(UI.empQ) || e.id.toLowerCase().includes(UI.empQ.toLowerCase()))
+  );
+}
+VIEWS.emp = function(){
+  const list = filteredEmps();
+  let h = head('사원명부', '가상 사원 ' + S.employees.length + '명. 검색·필터로 찾고, 카드에서 상세를 확인합니다. 주민등록번호·계좌 등 민감정보는 <b>가상으로도 만들지 않았습니다</b>.');
+  h += '<div class="note">실무 포인트 — 인사 데이터는 <b>사번(고유키)</b> 을 중심으로 관리합니다. 동명이인이 있어도 사번이 다르면 다른 사람입니다.</div>';
+  h += '<div class="toolbar">'
+    + '<label class="f">검색(이름/사번)<input id="fq" value="' + esc(UI.empQ) + '" placeholder="예: 오유진 또는 HB-0003" style="width:190px"></label>'
+    + '<label class="f">팀<select id="ft"><option value="">전체</option>' + teamOptions(UI.empTeam) + '</select></label>'
+    + '<label class="f">재직상태<select id="fs"><option value="">전체</option>'
+      + ['재직','휴직','퇴사'].map(s => '<option' + (UI.empStatus===s?' selected':'') + '>' + s + '</option>').join('') + '</select></label>'
+    + '<button onclick="empNew()">＋ 신규 사원 등록</button>'
+    + '<button class="ghost" onclick="empCsv()">CSV 내보내기</button>'
+    + '<span style="margin-left:auto;color:var(--muted);font-size:12px;align-self:center">조회 결과 <b>' + list.length + '</b>명</span>'
+    + '</div>';
+  h += table(
+    [{t:'사번'},{t:'이름'},{t:'본부'},{t:'팀'},{t:'직급'},{t:'직책'},{t:'입사일'},{t:'근속',num:true},{t:'상태'},{t:'가족',num:true},{t:'자녀',num:true},{t:'내선'},{t:''}],
+    list.map(e => [e.id, '<b>'+esc(e.name)+'</b>', e.hq, e.team, e.grade, e.role||'-',
+      e.join + (isFuture(e.join) ? ' <span class="pill p-plan">입사예정</span>' : ''),
+      tenure(e) + '년', pill(e.status),
+      (e.fam||1) + '명', (e.kids||0) + '명', e.ext,
+      '<button class="mini ghost" onclick="empDetail(\''+e.id+'\')">상세</button>'])
+  );
+  M().innerHTML = h;
+  $('#fq').oninput = ev => { UI.empQ = ev.target.value; render(); setTimeout(()=>{const i=$('#fq'); i.focus(); i.setSelectionRange(i.value.length,i.value.length);},0); };
+  $('#ft').onchange = ev => { UI.empTeam = ev.target.value; render(); };
+  $('#fs').onchange = ev => { UI.empStatus = ev.target.value; render(); };
+};
+function empCsv(){
+  csv('가상_사원명부_' + TODAY + '.csv',
+    ['사번','이름','본부','팀','직급','직책','입사일','재직상태','퇴사일','공제대상가족수','8~20세자녀수','내선','사내메일'],
+    filteredEmps().map(e => [e.id,e.name,e.hq,e.team,e.grade,e.role,e.join,e.status,e.leaveDate,e.fam||1,e.kids||0,e.ext,e.email]));
+}
+function empDetail(id){
+  const e = emp(id), a = annual(e), p = payroll(e, '2026-09'), s = attSummary(id, '2026-09');
+  const hist = S.appts.filter(x => x.empId === id);
+  let b = '<div class="warnbox" style="margin-bottom:10px">아래 정보는 <b>교육용 가상 인물</b>의 것입니다.</div>';
+  b += '<table><tbody>'
+    + tr('사번', e.id) + tr('성명', e.name) + tr('소속', e.hq + ' / ' + e.team)
+    + tr('직급 · 직책', e.grade + (e.role ? ' · ' + e.role : ''))
+    + tr('입사일', e.join + ' (근속 ' + tenure(e) + '년)' + (isFuture(e.join) ? ' <span class="pill p-plan">입사예정</span>' : ''))
+    + tr('재직상태', pill(e.status)
+        + (e.leaveDate ? ' · 퇴사일 ' + e.leaveDate : '')
+        + (e.status === '휴직' && e.leaveReason ? ' · ' + esc(e.leaveReason) : ''))
+    + tr('내선 · 메일', e.ext + ' · ' + e.email)
+    + tr('공제대상가족', (e.fam||1) + '명 (본인·배우자 각 1명) · 8~20세 자녀 ' + (e.kids||0) + '명 <small class="m">→ 소득세 산정 기준</small>')
+    + tr('2026 연차', '발생 ' + a.grant + '일 / 사용 ' + a.used + '일 / <b>잔여 ' + a.remain + '일</b>')
+    + tr('9월 근태', '정상 ' + s.정상 + ' · 지각 ' + s.지각 + ' · 조퇴 ' + s.조퇴 + ' · 결근 ' + s.결근 + ' · 휴가 ' + (s.휴가+s.반차))
+    + tr('9월 실지급(가상)', '<b>' + won(p.net) + '원</b>')
+    + '</tbody></table>';
+  const plan = hist.filter(isPlannedAppt);
+  if (plan.length) b += '<div class="warnbox" style="margin-top:12px"><b>예정 발령 ' + plan.length + '건</b> — '
+    + plan.map(x => x.date + ' ' + x.type + ' → ' + x.after).join(' / ')
+    + '<br>발령일이 아직 오지 않아 <b>위 정보와 급여에는 반영되지 않았습니다.</b></div>';
+  b += '<h4 style="margin:14px 0 6px">인사발령 이력 (가상)</h4>'
+    + table([{t:'일자'},{t:'적용'},{t:'구분'},{t:'발령 전'},{t:'발령 후'},{t:'사유'}],
+        hist.map(x => [x.date,
+          isPlannedAppt(x) ? '<span class="pill p-plan">예정</span>' : '<span class="pill p-ok">반영됨</span>',
+          x.type, x.before, x.after, esc(x.note)]));
+  b += '<div style="margin-top:12px"><button class="ghost" onclick="empEdit(\''+id+'\')">정보 수정</button></div>';
+  modal('사원 상세 — ' + e.name + ' (' + e.id + ')', b);
+}
+const tr = (k,v) => '<tr><th style="width:130px">' + k + '</th><td>' + v + '</td></tr>';
+
+function empNew(){
+  const nextNo = Math.max(...S.employees.map(e => Number(e.id.slice(3)))) + 1;
+  const b = '<div class="note">신규 입사자를 등록하면 <b>인사발령(입사)</b> 이력이 자동으로 함께 생성됩니다.</div>'
+    + '<label class="f">사번<input id="nId" value="HB-' + pad(nextNo,4) + '" readonly style="width:110px;background:var(--surface-strong)"></label>'
+    + '<label class="f">이름<input id="nName" placeholder="가상 이름" style="width:120px"></label>'
+    + '<label class="f">팀<select id="nTeam">' + teamOptions('인사총무팀') + '</select></label>'
+    + '<label class="f">직급<select id="nGrade">' + GRADES.map(g=>'<option'+(g==='사원'?' selected':'')+'>'+g+'</option>').join('') + '</select></label>'
+    + '<label class="f">직책<select id="nRole"><option value="">없음</option><option>팀장</option><option>본부장</option></select></label>'
+    + '<label class="f">입사일<input id="nJoin" type="date" value="2026-09-16"></label>'
+    + '<label class="f">공제대상가족 수<select id="nFam">' + [1,2,3,4,5,6,7,8,9,10,11].map(n=>'<option value="'+n+'">'+n+'명</option>').join('') + '</select></label>'
+    + '<label class="f">8~20세 자녀 수<select id="nKids">' + [0,1,2,3,4].map(n=>'<option value="'+n+'">'+n+'명</option>').join('') + '</select></label>'
+    + '<div class="note" style="margin-top:4px">공제대상가족 수는 <b>본인과 배우자를 각각 1명</b>으로 셉니다. 미혼 단독 세대면 1명입니다. 이 값으로 매달 소득세(간이세액표)가 정해집니다.</div>';
+  modal('신규 사원 등록 (가상)', b, () => {
+    const name = $('#nName').value.trim();
+    if (!name) { alert('이름을 입력하세요.'); return; }
+    const team = $('#nTeam').value, join = $('#nJoin').value;
+    const e = {id:$('#nId').value, name, team, hq:TEAM2HQ[team], grade:$('#nGrade').value,
+               join, role:$('#nRole').value, status:'재직', leaveDate:'',
+               fam:Number($('#nFam').value), kids:Number($('#nKids').value),
+               ext:String(1000+nextNo), email:'hb'+pad(nextNo,4)+'@hanbit-edu.example'};
+    S.employees.push(e);
+    S.appts.push({no:S.appts.length+1, date:join, empId:e.id, name, type:'입사',
+                  before:'-', after:team+' '+e.grade, note:'신규 입사(실습 입력)'});
+    save(); closeModal(); UI.empQ = name; render();
+    alert('등록되었습니다. (교육용 가상 자료)\n사번 ' + e.id);
+  }, '등록');
+}
+function empEdit(id){
+  const e = emp(id);
+  const b = '<label class="f">이름<input id="eName" value="' + esc(e.name) + '" style="width:120px"></label>'
+    + '<label class="f">팀<select id="eTeam">' + teamOptions(e.team) + '</select></label>'
+    + '<label class="f">직급<select id="eGrade">' + GRADES.map(g=>'<option'+(g===e.grade?' selected':'')+'>'+g+'</option>').join('') + '</select></label>'
+    + '<label class="f">직책<select id="eRole">' + ['','팀장','본부장'].map(r=>'<option value="'+r+'"'+(r===e.role?' selected':'')+'>'+(r||'없음')+'</option>').join('') + '</select></label>'
+    + '<label class="f">재직상태<select id="eStatus">' + ['재직','휴직','퇴사'].map(s=>'<option'+(s===e.status?' selected':'')+'>'+s+'</option>').join('') + '</select></label>'
+    + '<label class="f">퇴사일<input id="eLeave" type="date" value="' + e.leaveDate + '"></label>'
+    + '<label class="f">휴직 사유<input id="eReason" value="' + esc(e.leaveReason || '') + '" placeholder="예: 육아휴직" style="width:180px"></label>'
+    + '<label class="f">공제대상가족 수<select id="eFam">' + [1,2,3,4,5,6,7,8,9,10,11].map(n=>'<option value="'+n+'"'+(n===(e.fam||1)?' selected':'')+'>'+n+'명</option>').join('') + '</select></label>'
+    + '<label class="f">8~20세 자녀 수<select id="eKids">' + [0,1,2,3,4].map(n=>'<option value="'+n+'"'+(n===(e.kids||0)?' selected':'')+'>'+n+'명</option>').join('') + '</select></label>'
+    + '<div class="warnbox" style="margin-top:8px">실무에서는 이런 변경을 <b>반드시 발령 문서로 남깁니다.</b> 이 화면은 단순 수정이고, 이력을 남기려면 <b>인사발령</b> 화면을 쓰세요.<br>'
+    + '가족 수를 바꾸면 <b>이번 달 급여의 소득세부터</b> 바로 달라집니다.</div>';
+  modal('사원 정보 수정 — ' + e.name, b, () => {
+    e.name = $('#eName').value.trim() || e.name;
+    e.team = $('#eTeam').value; e.hq = TEAM2HQ[e.team];
+    e.grade = $('#eGrade').value; e.role = $('#eRole').value;
+    e.status = $('#eStatus').value; e.leaveDate = $('#eLeave').value;
+    e.fam = Number($('#eFam').value); e.kids = Number($('#eKids').value);
+    e.leaveReason = $('#eReason').value.trim();
+    save(); closeModal(); render();
+  }, '저장');
+}
+
+/* =====================================================================
+   3. 조직도
+   ===================================================================== */
+VIEWS.org = function(){
+  const work = S.employees.filter(e => e.status !== '퇴사');
+  let h = head('조직도', '본부 → 팀 → 구성원 구조입니다. 인원수와 평균 근속을 함께 보여줍니다. (휴직자 포함, 퇴사자 제외)');
+  h += '<div class="card tree"><div style="font-weight:700;font-size:15px;margin-bottom:6px">' + COMPANY
+     + ' <span class="cnt">· 총 ' + work.length + '명</span></div><ul>';
+  ORG.forEach(g => {
+    const hqEmps = work.filter(e => e.hq === g.hq);
+    const head_ = hqEmps.find(e => e.role === '본부장');
+    h += '<li><span class="n-hq">' + g.hq + '</span> <span class="cnt">' + hqEmps.length + '명'
+       + (head_ ? ' · 본부장 ' + head_.name + ' ' + head_.grade : '') + '</span><ul>';
+    g.teams.forEach(t => {
+      const ts = hqEmps.filter(e => e.team === t);
+      const lead = ts.find(e => e.role === '팀장');
+      const avg = ts.length ? (ts.reduce((s,e) => s + dayDiff(e.join, TODAY), 0) / ts.length / 365).toFixed(1) : '0';
+      h += '<li><span class="n-team">' + t + '</span> <span class="cnt">' + ts.length + '명 · 평균 근속 ' + avg + '년'
+         + (lead ? ' · 팀장 ' + lead.name : (head_ && head_.team === t ? ' · 팀장 공석(본부장 직할)' : ' · 팀장 공석')) + '</span><ul>';
+      ts.sort((a,b) => GRADES.indexOf(b.grade) - GRADES.indexOf(a.grade) || (a.join < b.join ? -1 : 1))
+        .forEach(e => h += '<li class="mem">' + esc(e.name) + ' ' + e.grade
+          + (e.role ? ' <span class="pill p-ok">' + e.role + '</span>' : '')
+          + (e.status === '휴직' ? ' ' + pill('휴직') : '')
+          + ' <span class="cnt">' + e.id + ' · 내선 ' + e.ext + '</span></li>');
+      h += '</ul></li>';
+    });
+    h += '</ul></li>';
+  });
+  h += '</ul></div>';
+  M().innerHTML = h;
+};
+
+/* =====================================================================
+   4. 인사발령
+   ===================================================================== */
+/* 발령일이 기준일보다 뒤면 아직 효력이 없다 — 저장하지 않고 매번 날짜로 판정한다 (PRD 규칙 1) */
+const isPlannedAppt = a => a.date > TODAY;
+
+VIEWS.appt = function(){
+  const rows = S.appts.slice().sort((a,b) => a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
+  const planned = rows.filter(isPlannedAppt);
+  let h = head('인사발령', '입사·승진·전보·휴직·퇴사 이력입니다. <b>발령일이 지난 건만</b> 사원명부에 반영됩니다.');
+  h += '<div class="note">실무 포인트 — 명부를 직접 고치는 것과 발령으로 고치는 것은 다릅니다. <b>발령은 근거 이력이 남고</b>, 나중에 경력증명서·퇴직금 산정의 기초가 됩니다.</div>';
+  h += '<div class="warnbox"><b>발령에서 제일 중요한 건 "언제부터"입니다.</b> '
+     + '기준일(' + TODAY + ')보다 뒤인 발령은 <span class="pill p-plan">예정</span> 으로만 남고 '
+     + '<b>명부도 급여도 바꾸지 않습니다.</b> 미리 등록했다고 급여가 먼저 바뀌면 그게 사고입니다.'
+     + (planned.length ? ' 현재 예정 발령 <b>' + planned.length + '건</b>.' : '') + '</div>';
+  h += '<div class="toolbar"><button onclick="apptNew()">＋ 발령 등록</button>'
+     + '<button class="ghost" onclick="apptCsv()">CSV 내보내기</button>'
+     + '<span style="margin-left:auto;color:var(--muted);font-size:12px;align-self:center">총 ' + rows.length + '건 (최근순)</span></div>';
+  h += table([{t:'No',num:true},{t:'발령일'},{t:'적용'},{t:'사번'},{t:'성명'},{t:'구분'},{t:'발령 전'},{t:'발령 후'},{t:'사유'}],
+    rows.map(a => [a.no, a.date,
+      isPlannedAppt(a) ? '<span class="pill p-plan">예정</span>' : '<span class="pill p-ok">반영됨</span>',
+      a.empId, esc(a.name), pillAppt(a.type), a.before, a.after, esc(a.note)]));
+  M().innerHTML = h;
+};
+function pillAppt(t){
+  const c = {'입사':'p-ok','승진':'p-wait','전보':'p-wait','휴직':'p-off','복직':'p-ok','퇴사':'p-bad'}[t] || 'p-off';
+  return '<span class="pill ' + c + '">' + t + '</span>';
+}
+function apptCsv(){
+  csv('가상_인사발령대장_' + TODAY + '.csv', ['No','발령일','사번','성명','구분','발령전','발령후','사유'],
+    S.appts.map(a => [a.no,a.date,a.empId,a.name,a.type,a.before,a.after,a.note]));
+}
+function apptNew(){
+  const opts = S.employees.filter(e => e.status !== '퇴사')
+    .map(e => '<option value="' + e.id + '">' + e.id + ' ' + e.name + ' (' + e.team + ' ' + e.grade + ')</option>').join('');
+  const b = '<label class="f">대상자<select id="aEmp" style="width:290px">' + opts + '</select></label>'
+    + '<label class="f">발령일<input id="aDate" type="date" value="' + TODAY + '"></label>'
+    + '<label class="f">구분<select id="aType"><option>승진</option><option>전보</option><option>휴직</option><option>복직</option><option>퇴사</option></select></label>'
+    + '<div id="aAfter"></div>'
+    + '<label class="f" style="display:flex;width:100%">사유<input id="aNote" value="(가상) 발령" style="width:100%"></label>';
+  modal('인사발령 등록 (가상)', b, () => {
+    const e = emp($('#aEmp').value), type = $('#aType').value, date = $('#aDate').value;
+    const before = e.team + ' ' + e.grade;
+    const planned = date > TODAY;              // 기준일 이후 → 아직 효력 없음
+    let after = before;
+
+    /* 발령 후 상태는 예정이든 아니든 기록한다. 다만 사원명부는 발령일이 지났을 때만 바꾼다. */
+    if (type === '승진') {
+      const g = $('#aGrade').value;
+      after = e.team + ' ' + g;
+      if (!planned) e.grade = g;
+    } else if (type === '전보') {
+      const t = $('#aTeam').value;
+      after = t + ' ' + e.grade;
+      if (!planned) { e.team = t; e.hq = TEAM2HQ[t]; }
+    } else if (type === '휴직') {
+      if (!planned) e.status = '휴직';
+    } else if (type === '복직') {
+      if (!planned) e.status = '재직';
+    } else if (type === '퇴사') {
+      after = '-';
+      if (!planned) { e.status = '퇴사'; e.leaveDate = date; }
+    }
+    S.appts.push({no:S.appts.length+1, date, empId:e.id, name:e.name, type, before, after, note:$('#aNote').value});
+    save(); closeModal(); render();
+    alert(planned
+      ? '발령이 등록되었습니다. (교육용 가상 자료)\n\n발령일 ' + date + ' 은(는) 기준일(' + TODAY + ') 이후라\n'
+        + '아직 "예정" 상태입니다. 사원명부와 급여는 바뀌지 않습니다.\n\n'
+        + '사원명부에서 ' + e.name + ' 님의 직급이 그대로인지 확인해 보세요.'
+      : '발령이 등록되고 사원명부에 반영되었습니다. (교육용 가상 자료)');
+  }, '등록');
+  const draw = () => {
+    const t = $('#aType').value;
+    $('#aAfter').innerHTML =
+      t === '승진' ? '<label class="f">승진 후 직급<select id="aGrade">' + GRADES.map(g=>'<option>'+g+'</option>').join('') + '</select></label>'
+    : t === '전보' ? '<label class="f">전보 후 팀<select id="aTeam">' + teamOptions('') + '</select></label>'
+    : '<div class="note" style="margin:0 0 10px">' + t + ' 처리 시 사원명부의 재직상태가 바뀝니다.</div>';
+  };
+  $('#aType').onchange = draw; draw();
+}
+
+/* =====================================================================
+   5. 근태 현황
+   ===================================================================== */
+VIEWS.att = function(){
+  const ym = '2026-09';
+  const all = attendance();
+  const teams = [].concat(...ORG.map(o => o.teams));
+  const day = UI.attDate;
+  const dayRows = all.filter(a => a.date === day && (!UI.attTeam || a.team === UI.attTeam));
+
+  const isPlan = day > ATT_TO;
+  let h = head('근태 현황', '<b>실적 구간 ' + ATT_FROM + ' ~ ' + ATT_TO + '</b> 은 출퇴근 기록이 있고, '
+    + '<b>예정 구간 ~ ' + ATT_PLAN_TO + '</b> 은 아직 오지 않은 날이라 승인된 휴가만 보입니다. '
+    + '출퇴근 기록은 고정된 가상 값으로, 앱을 다시 열어도 항상 같습니다.');
+  h += '<div class="note">실무 포인트 — 근태는 <b>급여(연장수당·결근공제)</b> 와 <b>연차</b> 양쪽에 바로 연결됩니다. '
+    + '다만 급여는 <b>실적 구간만</b> 씁니다. 아직 오지 않은 날의 출퇴근을 지어내서 급여를 계산할 수는 없기 때문입니다.</div>';
+
+  h += '<div class="toolbar">'
+    + '<label class="f">일자<input id="ad" type="date" value="' + day + '" min="' + ATT_FROM + '" max="' + ATT_PLAN_TO + '"></label>'
+    + '<label class="f">팀<select id="at"><option value="">전체</option>' + teams.map(t=>'<option'+(t===UI.attTeam?' selected':'')+'>'+t+'</option>').join('') + '</select></label>'
+    + '<button class="ghost" onclick="attCsv()">9월 집계 CSV</button></div>';
+
+  if (!isWorkday(day)) {
+    h += '<div class="warnbox">' + day + '(' + WD[d2(day).getDay()] + ')은(는) ' + (HOLIDAYS[day] || '휴무일') + '입니다. 근태 기록이 없습니다.</div>';
+  } else {
+    const cnt = t => dayRows.filter(r => r.state === t).length;
+    if (isPlan) {
+      h += '<div class="warnbox"><b>예정 구간입니다.</b> ' + day + '은(는) 기준일(' + TODAY + ') 이후라 '
+        + '출퇴근 기록이 없습니다. <b>승인된 휴가만</b> 표시됩니다. '
+        + '연장수당이 줄어드는 것까지 보려면 ' + ATT_TO + ' 이전 날짜로 휴가를 승인해 보세요.</div>';
+      h += '<div class="kpi">' + kpi('대상 인원', dayRows.length + '명', day + '(' + WD[d2(day).getDay()] + ')')
+        + kpi('휴가(예정)', cnt('휴가(예정)') + '명', '승인된 휴가', 'peach')
+        + kpi('미입력', cnt('미입력') + '명', '아직 오지 않은 날')
+        + kpi('휴직', cnt('휴직') + '명', '') + '</div>';
+    } else {
+      h += '<div class="kpi">' + kpi('출근 대상', dayRows.length + '명', day + '(' + WD[d2(day).getDay()] + ')')
+        + kpi('정상', cnt('정상') + '명', '') + kpi('지각', cnt('지각') + '명', '')
+        + kpi('조퇴', cnt('조퇴') + '명', '') + kpi('결근', cnt('결근') + '명', '', '', cnt('결근') > 0)
+        + kpi('휴가/반차', (cnt('휴가')+cnt('반차')) + '명', '승인된 휴가 반영') + '</div>';
+    }
+    h += '<div class="card"><h3>' + day + ' 일자별 근태' + (isPlan ? ' <span class="pill p-plan">예정</span>' : '') + '</h3>' + table(
+      [{t:'사번'},{t:'성명'},{t:'팀'},{t:'상태'},{t:'출근'},{t:'퇴근'},{t:'연장(h)',num:true}],
+      dayRows.map(a => [a.empId, esc(a.name), a.team, pill(a.state), a.inT || '-', a.outT || '-', a.ot || 0])
+    ) + '</div>';
+  }
+
+  const list = S.employees.filter(e => e.status !== '퇴사' && (!UI.attTeam || e.team === UI.attTeam));
+  h += '<div class="card"><h3>2026년 9월 월간 집계 <small class="m">— 실적 09-01~' + ATT_TO.slice(5)
+    + ' (급여 계산에 쓰는 값) · 예정 ~' + ATT_PLAN_TO.slice(5) + '</small></h3>' + table(
+    [{t:'사번'},{t:'성명'},{t:'팀'},{t:'근무일',num:true},{t:'정상',num:true},{t:'지각',num:true},{t:'조퇴',num:true},{t:'결근',num:true},{t:'휴가',num:true},{t:'연장(h)',num:true},{t:'예정 휴가',num:true}],
+    list.map(e => { const s = attSummary(e.id, ym);
+      return [e.id, esc(e.name), e.team, s.days, s.정상, hl(s.지각), hl(s.조퇴), hl(s.결근,true), s.휴가 + s.반차*0.5, s.ot,
+        s['휴가(예정)'] ? '<span class="pill p-plan">' + s['휴가(예정)'] + '일</span>' : 0]; })
+  ) + '</div>';
+  M().innerHTML = h;
+  $('#ad').onchange = ev => { UI.attDate = ev.target.value; render(); };
+  $('#at').onchange = ev => { UI.attTeam = ev.target.value; render(); };
+};
+const hl = (n,bad) => n ? '<b style="color:' + (bad ? 'var(--bad-fg)' : '#8a3d00') + '">' + n + '</b>' : 0;
+function attCsv(){
+  csv('가상_근태집계_2026-09.csv', ['사번','성명','팀','근무일','정상','지각','조퇴','결근','휴가','연장시간'],
+    S.employees.filter(e=>e.status!=='퇴사').map(e => { const s = attSummary(e.id,'2026-09');
+      return [e.id,e.name,e.team,s.days,s.정상,s.지각,s.조퇴,s.결근,s.휴가+s.반차*0.5,s.ot]; }));
+}
+
+/* =====================================================================
+   6. 연차 관리
+   ===================================================================== */
+VIEWS.annual = function(){
+  const list = S.employees.filter(e => e.status !== '퇴사');
+  let h = head('연차 관리', '<b>회계연도(매년 1월 1일) 기준</b> 일괄 부여 방식입니다. 각 행의 [근거] 버튼을 누르면 계산 과정을 펼쳐 보여줍니다.');
+  h += '<div class="warnbox"><b>교육용 단순화</b> — 실제 연차는 근로기준법 제60조와 회사 취업규칙에 따라 달라집니다. 여기서는 아래 3가지 규칙만 씁니다.<br>'
+     + '① 2026년 입사자 → 1개월 개근당 1일(최대 11일) &nbsp; ② 2025년 입사자 → 15일 × 전년 재직일수 비례 &nbsp; ③ 그 이전 입사자 → 15일 + (근속−1)÷2 가산(상한 25일)</div>';
+
+  /* 잔여가 음수인 사원 — 잔여보다 많이 승인해 버린 결과. 눈에 보이게 한다 (PRD 규칙 3) */
+  const over = list.filter(e => annual(e).remain < 0);
+  if (over.length) h += '<div class="warnbox"><b>잔여 연차가 음수인 사원 ' + over.length + '명</b> — '
+    + over.map(e => esc(e.name) + ' <b>' + annual(e).remain + '일</b>').join(', ')
+    + '<br>잔여보다 많이 승인된 상태입니다. 실무라면 <b>승인 취소·일부 반려·무급휴가 전환</b> 중 하나를 골라야 합니다.</div>';
+
+  const tot = list.reduce((s,e) => { const a = annual(e); s.g += a.grant; s.u += a.used; s.r += a.remain; return s; }, {g:0,u:0,r:0});
+  h += '<div class="kpi">' + kpi('총 발생일수', tot.g.toFixed(1) + '일', list.length + '명 합계')
+    + kpi('총 사용일수', tot.u.toFixed(1) + '일', '이관분 + 당기 승인분')
+    + kpi('총 잔여일수', tot.r.toFixed(1) + '일', '미사용 연차 부담')
+    + kpi('소진율', Math.round(tot.u/tot.g*100) + '%', '연말 집중 사용 방지 지표')
+    + (over.length ? kpi('잔여 음수', over.length + '명', '초과 승인 상태', 'coral', true) : '') + '</div>';
+
+  h += '<div class="toolbar"><button class="ghost" onclick="annualCsv()">CSV 내보내기</button></div>';
+  h += table(
+    [{t:'사번'},{t:'성명'},{t:'팀'},{t:'입사일'},{t:'근속',num:true},{t:'발생',num:true},{t:'이관 사용',num:true},{t:'당기 승인',num:true},{t:'사용 계',num:true},{t:'잔여',num:true},{t:''}],
+    list.map(e => { const a = annual(e);
+      return [e.id, esc(e.name), e.team, e.join, tenure(e)+'년', a.grant, a.carried, a.approved, a.used,
+        a.remain < 0
+          ? '<b style="color:var(--bad-fg)">' + a.remain + '</b> <span class="pill p-bad">초과 ' + a.remain + '일</span>'
+          : '<b style="color:' + (a.remain < 3 ? '#8a3d00' : 'var(--brand-teal)') + '">' + a.remain + '</b>',
+        '<button class="mini ghost" onclick="annualWhy(\''+e.id+'\')">근거</button>']; })
+  );
+  M().innerHTML = h;
+};
+function annualWhy(id){
+  const e = emp(id), a = annual(e);
+  const used = S.leaves.filter(l => l.empId===id && l.status==='승인' && l.from.startsWith('2026') && (l.type==='연차'||l.type.startsWith('반차')));
+  let b = '<div class="note">연차 계산은 <b>발생 − 사용 = 잔여</b> 한 줄입니다. 어려운 건 "발생"을 어떤 기준으로 세느냐입니다.</div>';
+  b += '<table><tbody>'
+    + tr('대상', e.name + ' (' + e.id + ') · 입사 ' + e.join)
+    + tr('① 발생', '<b>' + a.grant + '일</b><br><small class="m">' + esc(a.basis) + '</small>')
+    + tr('② 사용', a.used + '일 = 전산 이관분 ' + a.carried + '일 + 당기 승인분 ' + a.approved + '일')
+    + tr('③ 잔여', '<b style="font-size:16px">' + a.remain + '일</b>')
+    + '</tbody></table>';
+  b += '<h4 style="margin:14px 0 6px">2026년 승인된 연차·반차 (가상)</h4>'
+    + table([{t:'기간'},{t:'종류'},{t:'일수',num:true},{t:'사유'}],
+        used.map(l => [l.from + (l.from!==l.to ? ' ~ ' + l.to : ''), l.type, l.days, esc(l.reason)]));
+  modal('연차 계산 근거 — ' + e.name, b);
+}
+function annualCsv(){
+  csv('가상_연차대장_2026.csv', ['사번','성명','팀','입사일','발생일수','이관사용','당기승인','사용계','잔여','산정근거'],
+    S.employees.filter(e=>e.status!=='퇴사').map(e => { const a = annual(e);
+      return [e.id,e.name,e.team,e.join,a.grant,a.carried,a.approved,a.used,a.remain,a.basis]; }));
+}
+
+/* =====================================================================
+   7. 휴가 신청 · 결재
+   ===================================================================== */
+VIEWS.leave = function(){
+  const tabs = ['전체','대기','승인','반려'];
+  const rows = S.leaves.filter(l => UI.leaveTab === '전체' || l.status === UI.leaveTab)
+                       .sort((a,b) => a.from < b.from ? 1 : -1);
+  let h = head('휴가 신청 · 결재', '신청 → 결재(승인/반려) → 승인 시 <b>연차 잔여일수에서 자동 차감</b>되는 흐름을 따라가 봅니다.');
+  h += '<div class="note">실무 포인트 — 승인 전 반드시 <b>잔여일수</b>를 확인합니다. 잔여보다 많이 신청된 건은 이 앱이 경고를 띄웁니다.</div>';
+  h += '<div class="toolbar">'
+    + tabs.map(t => '<button class="' + (UI.leaveTab===t?'':'ghost') + '" onclick="UI.leaveTab=\''+t+'\';render()">' + t
+        + ' (' + (t==='전체' ? S.leaves.length : S.leaves.filter(l=>l.status===t).length) + ')</button>').join(' ')
+    + '<button onclick="leaveNew()" style="margin-left:12px">＋ 휴가 신청</button></div>';
+
+  h += table(
+    [{t:'No',num:true},{t:'신청자'},{t:'팀'},{t:'종류'},{t:'기간'},{t:'일수',num:true},{t:'신청 사유'},{t:'잔여(신청 전)',num:true},{t:'상태'},{t:'결재'}],
+    rows.map(l => {
+      const e = emp(l.empId), a = e ? annual(e) : {remain:0};
+      const before = l.status === '승인' ? Math.round((a.remain + l.days)*10)/10 : a.remain;
+      const over = (l.type === '연차' || l.type.startsWith('반차')) && l.status === '대기' && l.days > a.remain;
+      return [l.no, esc(l.name), l.team, l.type,
+        l.from + (l.from!==l.to ? ' ~ ' + l.to : ''), l.days, esc(l.reason),
+        (over ? '<b style="color:var(--bad-fg)">' + before + ' ⚠</b>' : before),
+        pill(l.status),
+        l.status === '대기'
+          ? '<button class="mini" onclick="leaveAct(' + l.no + ',\'승인\')">승인</button> '
+            + '<button class="mini ghost" onclick="leaveAct(' + l.no + ',\'반려\')">반려</button>'
+          : '<small class="m">' + (l.decidedBy || '-') + '</small>'];
+    })
+  );
+  M().innerHTML = h;
+};
+function leaveAct(no, act){
+  const l = S.leaves.find(x => x.no === no), e = emp(l.empId), a = annual(e);
+  if (act === '승인' && (l.type === '연차' || l.type.startsWith('반차')) && l.days > a.remain) {
+    if (!confirm('⚠ 잔여 연차(' + a.remain + '일)보다 신청 일수(' + l.days + '일)가 많습니다.\n실무라면 반려하거나 무급휴가로 전환해야 합니다.\n\n그래도 승인하시겠습니까? (교육용)')) return;
+  }
+  l.status = act; l.decidedBy = '팀장(실습 결재)';
+  save(); render();
+  alert(l.name + ' 님의 ' + l.type + ' 신청을 ' + act + ' 처리했습니다.'
+    + (act === '승인' ? '\n연차 잔여일수와 근태 현황에 즉시 반영됩니다.' : ''));
+}
+function leaveNew(){
+  const opts = S.employees.filter(e => e.status === '재직')
+    .map(e => { const a = annual(e); return '<option value="' + e.id + '">' + e.name + ' (' + e.team + ') · 잔여 ' + a.remain + '일</option>'; }).join('');
+  const b = '<label class="f">신청자<select id="lEmp" style="width:260px">' + opts + '</select></label>'
+    + '<label class="f">종류<select id="lType"><option>연차</option><option>반차(오전)</option><option>반차(오후)</option><option>병가</option><option>경조사</option></select></label>'
+    + '<label class="f">시작일<input id="lFrom" type="date" value="2026-09-21"></label>'
+    + '<label class="f">종료일<input id="lTo" type="date" value="2026-09-22"></label>'
+    + '<label class="f" style="width:100%;display:flex">사유<input id="lWhy" value="(가상) 개인 사유" style="width:100%"></label>'
+    + '<div class="note" style="margin-top:6px">일수는 <b>주말·공휴일을 뺀 실제 근무일</b>로 자동 계산됩니다. 반차는 0.5일입니다.</div>';
+  modal('휴가 신청 (가상)', b, () => {
+    const id = $('#lEmp').value, e = emp(id), type = $('#lType').value;
+    const from = $('#lFrom').value, to = $('#lTo').value;
+    if (to < from) { alert('종료일이 시작일보다 빠릅니다.'); return; }
+    let days = 0;
+    if (type.startsWith('반차')) days = 0.5;
+    else for (let c = d2(from); c <= d2(to); c.setDate(c.getDate()+1)) if (isWorkday(fmt(c))) days++;
+    if (!days) { alert('선택한 기간에 근무일이 없습니다. (주말·공휴일만 선택됨)'); return; }
+    S.leaves.push({no: ++S.seq.leave, empId:id, name:e.name, team:e.team, type,
+      from, to: type.startsWith('반차') ? from : to, days, status:'대기',
+      reason: $('#lWhy').value, reqDate: TODAY, decidedBy:''});
+    save(); closeModal(); UI.leaveTab = '대기'; render();
+    alert('신청되었습니다. 근무일 기준 ' + days + '일. (교육용 가상 자료)\n이제 [승인] 또는 [반려]로 결재해 보세요.');
+  }, '신청');
+}
+
+/* =====================================================================
+   8. 급여대장
+   ===================================================================== */
+const PAY_WARN = '<div class="warnbox"><b>사람·급여는 가상, 계산 규칙은 실제입니다.</b> '
+  + '소득세는 <b>소득세법 시행령 [별표 2] 근로소득 간이세액표(2026. 2. 27. 개정)</b> 를 그대로 조회하고, '
+  + '4대보험은 <b>2026년 요율</b>(건강보험 7.19% · 장기요양 13.14% · 국민연금 9.5% · 고용보험 0.9%)을 씁니다. '
+  + '다만 <b>사원 10명과 그들의 기본급·수당 체계는 이 교육을 위해 지어낸 것</b>이고, 실제 급여는 회사의 근로계약·취업규칙에 따라 달라집니다. '
+  + '<b>이 화면의 금액을 실제 급여 지급이나 세무 신고에 그대로 쓰지 마세요.</b></div>';
+
+VIEWS.pay = function(){
+  const ym = UI.payYm, list = payrollAll(ym);
+  const sum = k => list.reduce((s,p) => s + p[k], 0);
+  let h = head('급여대장', ym.replace('-','년 ') + '월분 · 지급일 ' + ym + '-25 · 대상 ' + list.length + '명 (퇴사자 제외)');
+  h += PAY_WARN;
+  if (ym === '2026-09') h += '<div class="note">9월은 기준일(' + TODAY + ') 특성상 <b>09-11까지의 근태</b>만 집계되어 있습니다. 그래서 연장수당이 8월보다 작게 잡힙니다. 월 전체가 반영된 값을 보려면 귀속월을 <b>2026-08</b>로 바꿔 보세요.</div>';
+  h += '<div class="toolbar">'
+    + '<label class="f">귀속월<select id="pym">' + ['2026-08','2026-09'].map(m=>'<option'+(m===ym?' selected':'')+'>'+m+'</option>').join('') + '</select></label>'
+    + '<button class="ghost" onclick="payCsv()">CSV 내보내기</button>'
+    + '<button class="ghost" onclick="payRule()">계산 규칙 보기</button></div>';
+  h += '<div class="kpi">' + kpi('지급총액', won(sum('gross')) + '원', '기본급+수당')
+    + kpi('공제총액', won(sum('deduct')) + '원', '4대보험+세금')
+    + kpi('실지급액', won(sum('net')) + '원', '계좌 이체 대상')
+    + kpi('연장수당', won(sum('overtime')) + '원', '총 ' + sum('otHours') + '시간') + '</div>';
+  h += table(
+    [{t:'사번'},{t:'성명'},{t:'팀'},{t:'직급'},{t:'기본급',num:true},{t:'직책',num:true},{t:'근속',num:true},{t:'식대',num:true},{t:'연장',num:true},{t:'결근공제',num:true},
+     {t:'지급계',num:true},{t:'과세대상',num:true},{t:'가족',num:true},{t:'국민연금',num:true},{t:'건강',num:true},{t:'장기요양',num:true},{t:'고용',num:true},{t:'소득세',num:true},{t:'지방세',num:true},{t:'공제계',num:true},{t:'실지급',num:true},{t:''}],
+    list.map(p => [p.e.id, esc(p.e.name) + (p.onLeave ? ' <span class="pill p-off">' + esc(p.e.leaveReason || p.e.status) + '</span>' : ''),
+      p.e.team, p.e.grade, won(p.base), won(p.roleP), won(p.senior), won(p.meal),
+      won(p.overtime), p.absentCut ? '-' + won(p.absentCut) : 0, '<b>'+won(p.gross)+'</b>', won(p.taxable),
+      p.fam + (p.kids ? '<small class="m">(자' + p.kids + ')</small>' : ''),
+      won(p.np), won(p.hi), won(p.ltc), won(p.ei), won(p.it), won(p.lit), won(p.deduct),
+      '<b style="color:var(--brand-teal)">' + won(p.net) + '</b>',
+      '<button class="mini ghost" onclick="UI.slipEmp=\''+p.e.id+'\';UI.payYm=\''+ym+'\';go(\'slip\')">명세서</button>'])
+  );
+  M().innerHTML = h;
+  $('#pym').onchange = ev => { UI.payYm = ev.target.value; render(); };
+};
+function payCsv(){
+  const ym = UI.payYm;
+  csv('가상_급여대장_' + ym + '.csv',
+    ['사번','성명','팀','직급','기본급','직책수당','근속수당','식대(비과세)','연장수당','결근공제','지급총액','과세대상액','공제대상가족수','8~20세자녀수','국민연금','건강보험','장기요양','고용보험','소득세','지방소득세','공제총액','실지급액'],
+    payrollAll(ym).map(p => [p.e.id,p.e.name,p.e.team,p.e.grade,p.base,p.roleP,p.senior,p.meal,p.overtime,-p.absentCut,p.gross,p.taxable,p.fam,p.kids,p.np,p.hi,p.ltc,p.ei,p.it,p.lit,p.deduct,p.net]));
+}
+function payRule(){
+  let b = PAY_WARN;
+  b += '<h4 style="margin:6px 0">지급 항목</h4>' + table([{t:'항목'},{t:'산정 기준'}], [
+    ['기본급','직급별 정액 (' + GRADES.map(g => g + ' ' + won(BASE_PAY[g])).join(' / ') + ')'],
+    ['직책수당','팀장 ' + won(ROLE_PAY['팀장']) + '원 · 본부장 ' + won(ROLE_PAY['본부장']) + '원'],
+    ['근속수당','근속 1년당 30,000원 (상한 300,000원)'],
+    ['식대','월 ' + won(MEAL) + '원 — <b>비과세</b>이므로 공제 계산에서 제외'],
+    ['연장수당','통상시급(기본급÷209) × 1.5 × 연장시간 — 근태 화면의 연장시간 사용'],
+    ['결근공제','기본급 ÷ 30 × 결근일수'],
+  ]);
+  b += '<h4 style="margin:14px 0 6px">공제 항목 (2026년 기준 실제 요율)</h4>' + table([{t:'항목'},{t:'요율 · 근거'},{t:'기준 금액'}], [
+    ['국민연금','4.75% (노사 각각, 전체 9.5%)','기준소득월액 = 과세대상액을 상한 ' + won(PENSION_CAP) + '원 / 하한 ' + won(PENSION_FLOOR) + '원으로 자른 뒤 1천원 미만 절사'],
+    ['건강보험','3.595% (노사 각각, 전체 7.19%)','과세대상액'],
+    ['장기요양','건강보험료의 13.14%','건강보험료'],
+    ['고용보험','0.9% (실업급여 근로자분)','과세대상액'],
+    ['소득세','<b>근로소득 간이세액표 조회</b>','과세대상액 + 공제대상가족 수'],
+    ['자녀세액공제','1명 20,830원 · 2명 45,830원 · 3명 이상 45,830원 + 초과 1명당 33,330원','간이세액표 금액에서 차감 (음수면 0원)'],
+    ['지방소득세','소득세의 10%','소득세'],
+  ]);
+  b += '<div class="note" style="margin-top:12px">과세대상 = 지급총액 − 식대(비과세 ' + won(MEAL) + '원). 실무에서 <b>비과세 항목을 빠뜨리면 공제액이 과다 계산</b>됩니다. 가장 흔한 실수입니다.</div>';
+  b += '<div class="note">소득세는 계산하는 게 아니라 <b>표에서 찾는 것</b>입니다. 가로축은 월급여액(비과세 제외), 세로축은 공제대상가족 수입니다. '
+     + '이 앱에는 국가법령정보센터의 공식 표 ' + TAX_ROWS.length + '개 구간(월급여 ' + won(TAX_BOUNDS[0]) + '천원 ~ ' + won(TAX_BOUNDS[TAX_BOUNDS.length-1]) + '천원)이 그대로 들어 있습니다. '
+     + '급여명세서 화면에서 가족 수를 바꿔 보면 세액이 어떻게 움직이는지 바로 보입니다.</div>';
+  b += '<div class="warnbox" style="margin-top:12px"><b>공제대상가족 수 세는 법</b> — 본인과 배우자를 각각 1명으로 셉니다(별표2 비고 2). '
+     + '따라서 미혼 단독 세대는 <b>1명</b>, 배우자 + 자녀 2명이면 <b>4명</b>입니다. 여기서 한 칸 틀리면 세액이 통째로 달라집니다.</div>';
+  modal('급여 계산 규칙', b);
+}
+
+/* =====================================================================
+   9. 급여명세서
+   ===================================================================== */
+VIEWS.slip = function(){
+  const e = emp(UI.slipEmp) || activeEmps()[0];
+  const ym = UI.payYm;
+  if (UI.slipOf !== e.id) { UI.slipOf = e.id; UI.ovFam = null; UI.ovKids = null; }   // 사원 바뀌면 조정값 초기화
+  const ov = {fam: UI.ovFam, kids: UI.ovKids};
+  const p = payroll(e, ym, ov), a = annual(e), s = attSummary(e.id, ym);
+  const base = payroll(e, ym);                       // 원래 가족 수 기준 (비교용)
+  const changed = p.fam !== (e.fam||1) || p.kids !== (e.kids||0);
+  let h = head('급여명세서', '근로기준법상 명세서 필수 기재사항(성명, 임금 항목별 금액, 계산 방법, 공제 내역)을 갖춘 <b>가상</b> 양식입니다.');
+  h += '<div class="toolbar">'
+    + '<label class="f">사원<select id="sEmp" style="width:250px">'
+      + S.employees.filter(x=>x.status!=='퇴사').map(x => '<option value="'+x.id+'"'+(x.id===e.id?' selected':'')+'>'+x.id+' '+x.name+' ('+x.team+')</option>').join('')
+    + '</select></label>'
+    + '<label class="f">귀속월<select id="sYm">' + ['2026-08','2026-09'].map(m=>'<option'+(m===ym?' selected':'')+'>'+m+'</option>').join('') + '</select></label>'
+    + '<button class="ghost" onclick="window.print()">인쇄 미리보기</button></div>';
+
+  /* 간이세액표 실험대 — 가족 수를 바꿔가며 세액 변화를 본다 */
+  h += '<div class="card"><h3>간이세액표 실험 — 공제대상가족 수를 바꿔 보세요</h3>'
+    + '<div class="toolbar" style="margin-bottom:6px">'
+    + '<label class="f">공제대상가족 수 (본인 포함)<select id="ovFam">'
+      + [1,2,3,4,5,6,7,8,9,10,11].map(n => '<option value="'+n+'"'+(n===p.fam?' selected':'')+'>'+n+'명</option>').join('')
+    + '</select></label>'
+    + '<label class="f">8~20세 자녀 수<select id="ovKids">'
+      + [0,1,2,3,4].map(n => '<option value="'+n+'"'+(n===p.kids?' selected':'')+'>'+n+'명</option>').join('')
+    + '</select></label>'
+    + (changed ? '<button class="ghost" onclick="UI.ovFam=null;UI.ovKids=null;render()">원래 값으로</button>' : '')
+    + '</div>'
+    + '<div class="row" style="gap:12px">'
+      + '<div style="flex:1 1 380px;min-width:340px">' + table([{t:'단계'},{t:'금액(원)',num:true}], [
+          ['월급여액 <small class="m">(비과세 제외)</small>', won(p.taxable)],
+          ['표에서 찾은 구간', p.st.row ? (won(p.st.row.from) + ' ~ ' + won(p.st.row.to) + '천원') : '표 범위 밖'],
+          ['① 간이세액표 금액 <small class="m">(가족 ' + p.fam + '명)</small>', won(p.st.table)],
+          ['② 자녀세액공제 <small class="m">(' + p.kids + '명)</small>', p.st.childCut ? '-' + won(p.st.childCut) : '0'],
+          ['<b>소득세 = ① − ②</b>', '<b>' + won(p.it) + '</b>'],
+          ['지방소득세 <small class="m">(×10%)</small>', won(p.lit)],
+        ]) + '</div>'
+      + '<div style="flex:1 1 300px;min-width:280px">'
+        + (changed
+            ? '<div class="note" style="margin:0">원래 등록값(가족 ' + (e.fam||1) + '명 · 자녀 ' + (e.kids||0) + '명) 기준 소득세는 <b>' + won(base.it) + '원</b>입니다.<br>'
+              + '지금 조건으로는 <b>' + won(p.it) + '원</b> — 차이 <b style="color:' + (p.it > base.it ? 'var(--bad-fg)' : 'var(--ok-fg)') + '">'
+              + (p.it > base.it ? '+' : '') + won(p.it - base.it) + '원</b>.<br><br>'
+              + '실지급액은 ' + won(base.net) + '원 → <b>' + won(p.net) + '원</b>으로 바뀝니다.<br>'
+              + '<small class="m">※ 화면에서만 바꿔 본 것이며 사원 정보는 그대로입니다. 실제로 고치려면 사원명부 → 정보 수정.</small></div>'
+            : '<div class="note" style="margin:0">지금은 <b>' + e.name + ' 님의 등록값</b>(가족 ' + (e.fam||1) + '명 · 8~20세 자녀 ' + (e.kids||0) + '명) 기준입니다.<br><br>'
+              + '위 선택을 바꾸면 같은 급여인데 <b>소득세가 얼마나 달라지는지</b> 바로 보입니다. '
+              + '부양가족 신고 한 줄이 매달 실수령액을 바꾼다는 걸 교육생이 직접 확인하게 하세요.</div>')
+      + '</div></div></div>';
+
+  h += '<div class="payslip"><div class="wm">교육용 가상 자료</div>'
+    + '<h2>급 여 명 세 서</h2>'
+    + '<div class="meta">' + COMPANY + ' · ' + ym.replace('-','년 ') + '월분 · 지급일 ' + ym + '-25<br>'
+    + '<b style="color:#8a3d00">교육용 가상 자료 — 실제 지급 내역이 아닙니다</b></div>'
+    + '<table><tbody>'
+      + tr('성명 / 사번', e.name + ' / ' + e.id)
+      + tr('소속 / 직급', e.hq + ' ' + e.team + ' / ' + e.grade + (e.role ? ' (' + e.role + ')' : ''))
+      + tr('입사일 / 근속', e.join + ' / ' + p.yrs + '년')
+      + tr('근태', '연장 ' + p.otHours + '시간 · 결근 ' + p.absent + '일 · 휴가 ' + (s.휴가 + s.반차*0.5) + '일')
+    + '</tbody></table>'
+    + '<div style="display:flex;gap:14px;margin-top:12px;flex-wrap:wrap">'
+      + '<div style="flex:1;min-width:250px"><h4 style="margin:0 0 4px">지급 내역</h4>' + table([{t:'항목'},{t:'금액(원)',num:true}], [
+          ['기본급', won(p.base)], ['직책수당', won(p.roleP)], ['근속수당', won(p.senior)],
+          ['식대(비과세)', won(p.meal)], ['연장근로수당', won(p.overtime)],
+          ['결근공제', p.absentCut ? '-' + won(p.absentCut) : '0'],
+          ['<b>지급 총액</b>', '<b>' + won(p.gross) + '</b>']]) + '</div>'
+      + '<div style="flex:1;min-width:250px"><h4 style="margin:0 0 4px">공제 내역</h4>' + table([{t:'항목'},{t:'금액(원)',num:true}], [
+          ['국민연금 (4.75%)', won(p.np)], ['건강보험 (3.595%)', won(p.hi)],
+          ['장기요양 (건보×13.14%)', won(p.ltc)], ['고용보험 (0.9%)', won(p.ei)],
+          ['소득세 (간이세액표)', won(p.it)], ['지방소득세 (소득세×10%)', won(p.lit)],
+          ['<b>공제 총액</b>', '<b>' + won(p.deduct) + '</b>']]) + '</div>'
+    + '</div>'
+    + '<div style="margin-top:14px;padding-top:10px;border-top:2px solid #333;display:flex;justify-content:space-between">'
+      + '<span class="tot">실지급액</span><span class="tot">' + won(p.net) + ' 원</span></div>'
+    + '<div style="margin-top:10px;font-size:11.5px;color:var(--muted)">· 과세대상액 ' + won(p.taxable) + '원 (지급총액 − 비과세 식대 ' + won(MEAL) + '원)<br>'
+      + '· 소득세: 근로소득 간이세액표(소득세법 시행령 별표2, 2026.2.27. 개정) · 공제대상가족 ' + p.fam + '명 · 8~20세 자녀 ' + p.kids + '명<br>'
+      + '· 국민연금 기준소득월액 ' + won(p.npBase) + '원<br>'
+      + '· 연차 잔여 ' + a.remain + '일 / 발생 ' + a.grant + '일<br>'
+      + '· 본 명세서는 교육을 위해 생성된 가상 문서이며 법적 효력이 없습니다.</div>'
+    + '</div>';
+  M().innerHTML = h;
+  $('#sEmp').onchange = ev => { UI.slipEmp = ev.target.value; render(); };
+  $('#sYm').onchange = ev => { UI.payYm = ev.target.value; render(); };
+  $('#ovFam').onchange = ev => { UI.ovFam = Number(ev.target.value); render(); };
+  $('#ovKids').onchange = ev => { UI.ovKids = Number(ev.target.value); render(); };
+};
+
+/* =====================================================================
+   10. 4대보험
+   ===================================================================== */
+VIEWS.ins = function(){
+  const ym = UI.payYm, list = payrollAll(ym).filter(p => !p.onLeave);
+  const sum = k => list.reduce((s,p) => s + p[k], 0);
+  // 사업주 부담분 (교육용 가정: 연금·건강·장기요양 동일 부담, 고용보험은 사업주 1.15%)
+  const empNP = sum('np'), empHI = sum('hi'), empLTC = sum('ltc'), empEI = sum('ei');
+  const coNP = empNP, coHI = empHI, coLTC = empLTC;
+  const coEI = r10(sum('taxable') * RATE_CO_EI);
+  let h = head('4대보험', ym.replace('-','년 ') + '월분 신고·납부 대상 집계 (가상 인원). 근로자 부담분과 사업주 부담분을 나눠서 봅니다.');
+  h += '<div class="warnbox"><b>요율은 2026년 실제값, 사람은 가상입니다.</b> '
+     + '국민연금·건강보험·장기요양은 노사가 <b>같은 금액</b>을 부담합니다. '
+     + '고용보험만 다릅니다 — 실업급여는 노사 각 0.9%지만 사업주는 <b>고용안정·직업능력개발사업분</b>을 더 냅니다. '
+     + '여기서는 150인 미만 사업장 기준 <b>사업주 1.15%</b>로 잡았습니다. 사업장 규모·업종에 따라 달라지고, 산재보험(전액 사업주 부담)은 업종별 요율이라 이 앱에서는 제외했습니다.</div>';
+  h += '<div class="toolbar"><label class="f">귀속월<select id="iym">'
+     + ['2026-08','2026-09'].map(m=>'<option'+(m===ym?' selected':'')+'>'+m+'</option>').join('') + '</select></label>'
+     + '<button class="ghost" onclick="insCsv()">CSV 내보내기</button></div>';
+
+  h += '<div class="card"><h3>보험별 납부액 집계 (가상)</h3>' + table(
+    [{t:'보험'},{t:'근로자 부담',num:true},{t:'사업주 부담',num:true},{t:'합계(납부액)',num:true},{t:'적용 요율(교육용)'}],
+    [['국민연금', won(empNP), won(coNP), won(empNP+coNP), '각 4.75% (전체 9.5% · 기준소득월액 상한 ' + won(PENSION_CAP) + '원)'],
+     ['건강보험', won(empHI), won(coHI), won(empHI+coHI), '각 3.595% (전체 7.19%)'],
+     ['장기요양', won(empLTC), won(coLTC), won(empLTC+coLTC), '건강보험료 × 13.14%'],
+     ['고용보험', won(empEI), won(coEI), won(empEI+coEI), '근로자 0.9% / 사업주 1.15%'],
+     ['<b>합계</b>', '<b>'+won(empNP+empHI+empLTC+empEI)+'</b>', '<b>'+won(coNP+coHI+coLTC+coEI)+'</b>',
+      '<b>'+won(empNP+empHI+empLTC+empEI+coNP+coHI+coLTC+coEI)+'</b>', '']]
+  ) + '</div>';
+
+  h += '<div class="card"><h3>사원별 공제 내역 (가상)</h3>' + table(
+    [{t:'사번'},{t:'성명'},{t:'팀'},{t:'과세대상',num:true},{t:'국민연금',num:true},{t:'건강보험',num:true},{t:'장기요양',num:true},{t:'고용보험',num:true},{t:'근로자 계',num:true}],
+    list.map(p => [p.e.id, esc(p.e.name), p.e.team, won(p.taxable), won(p.np), won(p.hi), won(p.ltc), won(p.ei),
+      '<b>' + won(p.np+p.hi+p.ltc+p.ei) + '</b>'])
+  ) + '</div>';
+
+  h += '<div class="note">실무 포인트 — 입·퇴사자가 생기면 <b>취득·상실 신고</b>가 따라옵니다. 이 앱의 인사발령(입사/퇴사) 화면이 그 출발점입니다. '
+     + '이번 달 신고 대상: 입사 ' + S.employees.filter(e=>e.join.startsWith(ym)).length + '명 / 퇴사 '
+     + S.employees.filter(e=>e.leaveDate && e.leaveDate.startsWith(ym)).length + '명.</div>';
+  M().innerHTML = h;
+  $('#iym').onchange = ev => { UI.payYm = ev.target.value; render(); };
+};
+function insCsv(){
+  const ym = UI.payYm;
+  csv('가상_4대보험_' + ym + '.csv', ['사번','성명','팀','과세대상','국민연금','건강보험','장기요양','고용보험','근로자부담계'],
+    payrollAll(ym).filter(p=>!p.onLeave).map(p => [p.e.id,p.e.name,p.e.team,p.taxable,p.np,p.hi,p.ltc,p.ei,p.np+p.hi+p.ltc+p.ei]));
+}
+
+/* =====================================================================
+   11. 비품 재고
+   ===================================================================== */
+VIEWS.stock = function(){
+  const cats = [...new Set(S.stock.map(s => s.cat))];
+  const list = S.stock.filter(s => !UI.stockCat || s.cat === UI.stockCat);
+  const low = S.stock.filter(s => s.qty < s.safe);
+  let h = head('비품 재고', '안전재고보다 수량이 적으면 빨간색으로 표시됩니다. 입고·출고를 처리하면 이력이 남습니다.');
+  h += '<div class="note">실무 포인트 — 총무 비품 관리의 핵심은 <b>안전재고</b> 입니다. "떨어지면 사는" 게 아니라 "떨어지기 전에 사는" 기준선입니다.</div>';
+  if (low.length) h += '<div class="warnbox"><b>발주 검토 필요 ' + low.length + '품목</b> — '
+    + low.map(s => esc(s.name) + '(' + s.qty + '/' + s.safe + ')').join(', ') + '</div>';
+  h += '<div class="toolbar"><label class="f">분류<select id="sc"><option value="">전체</option>'
+    + cats.map(c=>'<option'+(c===UI.stockCat?' selected':'')+'>'+c+'</option>').join('') + '</select></label>'
+    + '<button class="ghost" onclick="stockCsv()">CSV 내보내기</button>'
+    + '<span style="margin-left:auto;align-self:center;font-size:12px;color:var(--muted)">재고 자산가액 합계 '
+    + won(S.stock.reduce((t,s)=>t+s.qty*s.price,0)) + '원 (가상)</span></div>';
+  h += table(
+    [{t:'코드'},{t:'품목'},{t:'분류'},{t:'단위'},{t:'현재고',num:true},{t:'안전재고',num:true},{t:'상태'},{t:'단가',num:true},{t:'재고금액',num:true},{t:'거래처'},{t:'입·출고'}],
+    list.map(s => [s.code, esc(s.name), s.cat, s.unit,
+      (s.qty < s.safe ? '<b style="color:var(--bad-fg)">' + s.qty + '</b>' : s.qty), s.safe,
+      s.qty < s.safe ? '<span class="pill p-bad">부족</span>' : '<span class="pill p-ok">정상</span>',
+      won(s.price), won(s.qty*s.price),
+      esc(s.vendor),
+      '<button class="mini" onclick="stockMove(\''+s.code+'\',1)">입고</button> '
+      + '<button class="mini ghost" onclick="stockMove(\''+s.code+'\',-1)">출고</button>'])
+  );
+  if (S.stockLogs.length) h += '<div class="card" style="margin-top:14px"><h3>입·출고 이력 (실습 기록)</h3>' + table(
+    [{t:'일시'},{t:'코드'},{t:'품목'},{t:'구분'},{t:'수량',num:true},{t:'처리 후 재고',num:true},{t:'비고'}],
+    S.stockLogs.slice().reverse().map(l => [l.at, l.code, esc(l.name), l.dir>0?'입고':'출고', l.qty, l.after, esc(l.memo)])) + '</div>';
+  M().innerHTML = h;
+  $('#sc').onchange = ev => { UI.stockCat = ev.target.value; render(); };
+};
+function stockMove(code, dir){
+  const s = S.stock.find(x => x.code === code);
+  const b = '<table><tbody>' + tr('품목', s.name + ' (' + s.code + ')')
+    + tr('현재고', s.qty + s.unit + ' / 안전재고 ' + s.safe + s.unit) + '</tbody></table>'
+    + '<label class="f" style="margin-top:10px">' + (dir>0?'입고':'출고') + ' 수량<input id="mq" type="number" min="1" value="' + (dir>0 ? Math.max(1, s.safe - s.qty + 5) : 1) + '" style="width:100px"></label>'
+    + '<label class="f">비고<input id="mm" value="' + (dir>0?'(가상) 정기 발주 입고':'(가상) 부서 불출') + '" style="width:220px"></label>';
+  modal((dir>0?'입고':'출고') + ' 처리 (가상)', b, () => {
+    const q = Number($('#mq').value);
+    if (!q || q < 1) { alert('수량을 확인하세요.'); return; }
+    if (dir < 0 && q > s.qty) { alert('현재고(' + s.qty + ')보다 많이 출고할 수 없습니다.'); return; }
+    s.qty += dir * q;
+    S.stockLogs.push({at: TODAY + ' ' + pad(new Date().getHours()) + ':' + pad(new Date().getMinutes()),
+      code:s.code, name:s.name, dir, qty:q, after:s.qty, memo:$('#mm').value});
+    save(); closeModal(); render();
+  }, '처리');
+}
+function stockCsv(){
+  csv('가상_비품재고_' + TODAY + '.csv', ['코드','품목','분류','단위','현재고','안전재고','부족여부','단가','재고금액','거래처'],
+    S.stock.map(s => [s.code,s.name,s.cat,s.unit,s.qty,s.safe,s.qty<s.safe?'부족':'정상',s.price,s.qty*s.price,s.vendor]));
+}
+
+/* =====================================================================
+   12. 자산 대장
+   ===================================================================== */
+VIEWS.asset = function(){
+  const q = UI.assetQ.trim();
+  const list = S.assets.filter(a => !q || a.code.includes(q) || a.name.includes(q)
+    || ((emp(a.holder)||{}).name || '').includes(q));
+  const cnt = st => S.assets.filter(a => a.status === st).length;
+  let h = head('자산 대장', '노트북·모니터 등 회사 자산의 <b>사용자·취득일·상태</b>를 관리합니다. 퇴사자 자산 회수 누락이 총무의 단골 사고입니다.');
+  h += '<div class="kpi">' + kpi('총 자산', S.assets.length + '건', '취득가 합계 ' + won(S.assets.reduce((t,a)=>t+a.price,0)) + '원')
+    + kpi('사용중', cnt('사용중') + '건', '') + kpi('보관중', cnt('보관중') + '건', '불출 가능')
+    + kpi('수리/폐기', (cnt('수리중')+cnt('폐기대기')) + '건', '처분 검토 대상') + '</div>';
+  const orphan = S.assets.filter(a => a.holder && (emp(a.holder)||{}).status === '퇴사');
+  if (orphan.length) h += '<div class="warnbox"><b>회수 확인 필요</b> — 퇴사자 명의 자산 ' + orphan.length + '건: '
+    + orphan.map(a => a.code).join(', ') + '</div>';
+  h += '<div class="toolbar"><label class="f">검색<input id="aq" value="' + esc(UI.assetQ) + '" placeholder="자산번호·품목·사용자" style="width:200px"></label>'
+    + '<button class="ghost" onclick="assetCsv()">CSV 내보내기</button></div>';
+  h += table(
+    [{t:'자산번호'},{t:'품목'},{t:'사용자'},{t:'소속'},{t:'취득일'},{t:'취득가',num:true},{t:'상태'},{t:'처리'}],
+    list.map(a => { const e = emp(a.holder);
+      return [a.code, esc(a.name), e ? esc(e.name) : '<small class="m">(미지정)</small>', e ? e.team : '-',
+        a.acqDate, won(a.price), pill(a.status),
+        '<button class="mini ghost" onclick="assetEdit(\''+a.code+'\')">불출/반납</button>']; })
+  );
+  M().innerHTML = h;
+  $('#aq').oninput = ev => { UI.assetQ = ev.target.value; render(); setTimeout(()=>{const i=$('#aq'); i.focus(); i.setSelectionRange(i.value.length,i.value.length);},0); };
+};
+function assetEdit(code){
+  const a = S.assets.find(x => x.code === code);
+  const b = '<table><tbody>' + tr('자산번호', a.code) + tr('품목', a.name) + tr('취득', a.acqDate + ' · ' + won(a.price) + '원') + '</tbody></table>'
+    + '<label class="f" style="margin-top:10px">사용자<select id="ah" style="width:250px"><option value="">(미지정 · 보관)</option>'
+      + S.employees.filter(e=>e.status!=='퇴사').map(e=>'<option value="'+e.id+'"'+(e.id===a.holder?' selected':'')+'>'+e.name+' ('+e.team+')</option>').join('')
+    + '</select></label>'
+    + '<label class="f">상태<select id="as">' + ['사용중','보관중','수리중','폐기대기'].map(s=>'<option'+(s===a.status?' selected':'')+'>'+s+'</option>').join('') + '</select></label>';
+  modal('자산 불출 / 반납 (가상)', b, () => {
+    a.holder = $('#ah').value; a.status = $('#as').value;
+    if (!a.holder && a.status === '사용중') a.status = '보관중';
+    // 사용자를 지정했는데 '보관중'이면 모순이다. 수리중·폐기대기는 담당자가 고른 것이니 그대로 둔다.
+    if (a.holder && a.status === '보관중') a.status = '사용중';
+    save(); closeModal(); render();
+  }, '저장');
+}
+function assetCsv(){
+  csv('가상_자산대장_' + TODAY + '.csv', ['자산번호','품목','사용자사번','사용자명','소속','취득일','취득가','상태'],
+    S.assets.map(a => { const e = emp(a.holder);
+      return [a.code,a.name,a.holder,e?e.name:'',e?e.team:'',a.acqDate,a.price,a.status]; }));
+}
+
+/* =====================================================================
+   13. 회의실 예약
+   ===================================================================== */
+VIEWS.room = function(){
+  const base = d2(UI.roomDate); base.setDate(base.getDate() - ((base.getDay()+6)%7));  // 주 시작(월)
+  const week = []; for (let i=0;i<7;i++){ const c = new Date(base); c.setDate(base.getDate()+i); week.push(fmt(c)); }
+  let h = head('회의실 예약', '회의실 ' + S.rooms.length + '곳의 주간 예약 현황입니다. 시간이 겹치는 예약은 <b>등록 단계에서 막힙니다</b>.');
+  h += '<div class="toolbar"><label class="f">주간 기준일<input id="rd" type="date" value="' + UI.roomDate + '"></label>'
+    + '<button onclick="roomNew()">＋ 예약 등록</button></div>';
+  h += '<div class="card"><div class="calgrid">'
+    + week.map(d => '<div class="d hd">' + d.slice(5) + '(' + WD[d2(d).getDay()] + ')' + (HOLIDAYS[d] ? '<br><span style="color:#8a3d00">'+HOLIDAYS[d]+'</span>' : '') + '</div>').join('')
+    + week.map(d => {
+        const bs = S.bookings.filter(b => b.date === d).sort((x,y) => x.start < y.start ? -1 : 1);
+        return '<div class="d' + (isWorkday(d) ? '' : ' off') + '"><div class="dn">' + Number(d.slice(8)) + '</div>'
+          + bs.map(b => '<div class="ev" title="' + esc(b.title) + '">' + b.start + ' ' + esc(b.room.split('(')[0]) + '</div>').join('') + '</div>';
+      }).join('')
+    + '</div></div>';
+  const wb = S.bookings.filter(b => b.date >= week[0] && b.date <= week[6]).sort((a,b) => (a.date+a.start) < (b.date+b.start) ? -1 : 1);
+  h += '<div class="card"><h3>예약 목록</h3>' + table(
+    [{t:'일자'},{t:'회의실'},{t:'시간'},{t:'안건'},{t:'예약자'},{t:''}],
+    wb.map(b => [b.date + '(' + WD[d2(b.date).getDay()] + ')', b.room, b.start + ' ~ ' + b.end, esc(b.title),
+      (emp(b.by)||{}).name || '-', '<button class="mini ghost" onclick="roomDel(' + b.no + ')">취소</button>'])
+  ) + '</div>';
+  M().innerHTML = h;
+  $('#rd').onchange = ev => { UI.roomDate = ev.target.value; render(); };
+};
+function roomDel(no){
+  if (!confirm('예약을 취소할까요? (교육용 가상 자료)')) return;
+  S.bookings = S.bookings.filter(b => b.no !== no); save(); render();
+}
+function roomNew(){
+  const b = '<label class="f">회의실<select id="rRoom">' + S.rooms.map(r=>'<option>'+r+'</option>').join('') + '</select></label>'
+    + '<label class="f">일자<input id="rDate" type="date" value="' + UI.roomDate + '"></label>'
+    + '<label class="f">시작<input id="rS" type="time" value="10:00"></label>'
+    + '<label class="f">종료<input id="rE" type="time" value="11:00"></label>'
+    + '<label class="f" style="width:100%;display:flex">안건<input id="rT" value="(가상) 회의" style="width:100%"></label>'
+    + '<label class="f">예약자<select id="rBy" style="width:240px">'
+      + S.employees.filter(e=>e.status==='재직').map(e=>'<option value="'+e.id+'"'+(e.id==='HB-0005'?' selected':'')+'>'+e.name+' ('+e.team+')</option>').join('') + '</select></label>';
+  modal('회의실 예약 (가상)', b, () => {
+    const room = $('#rRoom').value, date = $('#rDate').value, s = $('#rS').value, e2 = $('#rE').value;
+    if (e2 <= s) { alert('종료 시각이 시작 시각보다 빠르거나 같습니다.'); return; }
+    const clash = S.bookings.find(x => x.room === room && x.date === date && s < x.end && e2 > x.start);
+    if (clash) { alert('예약이 겹칩니다.\n' + clash.room + ' ' + clash.date + ' ' + clash.start + '~' + clash.end + '\n「' + clash.title + '」\n\n다른 시간이나 회의실을 선택하세요.'); return; }
+    S.bookings.push({no: ++S.seq.booking, room, date, start:s, end:e2, title:$('#rT').value, by:$('#rBy').value});
+    save(); closeModal(); UI.roomDate = date; render();
+  }, '예약');
+}
+
+/* =====================================================================
+   14. 문서 대장
+   ===================================================================== */
+VIEWS.doc = function(){
+  const list = S.docs.filter(d => !UI.docKind || d.kind === UI.docKind).sort((a,b) => a.date < b.date ? 1 : -1);
+  let h = head('문서 대장', '공문 접수·발송 대장입니다. <b>보존연한</b>이 지난 문서는 폐기 심의 대상이 됩니다.');
+  h += '<div class="note">실무 포인트 — 대장의 목적은 "찾을 수 있게" 하는 것입니다. 문서번호 체계가 흔들리면 대장 자체가 쓸모없어집니다.</div>';
+  h += '<div class="toolbar"><label class="f">구분<select id="dk"><option value="">전체</option>'
+    + ['접수','발송'].map(k=>'<option'+(k===UI.docKind?' selected':'')+'>'+k+'</option>').join('') + '</select></label>'
+    + '<button onclick="docNew()">＋ 문서 등록</button>'
+    + '<button class="ghost" onclick="docCsv()">CSV 내보내기</button>'
+    + '<span style="margin-left:auto;align-self:center;font-size:12px;color:var(--muted)">총 ' + list.length + '건</span></div>';
+  h += table(
+    [{t:'문서번호'},{t:'일자'},{t:'구분'},{t:'제목'},{t:'발신'},{t:'수신'},{t:'보존연한',num:true},{t:'폐기예정'}],
+    list.map(d => {
+      const exp = (Number(d.date.slice(0,4)) + d.keep) + '-12-31';
+      return [d.no, d.date, '<span class="pill ' + (d.kind==='접수'?'p-wait':'p-ok') + '">' + d.kind + '</span>',
+        esc(d.title), esc(d.from), esc(d.to), d.keep + '년', exp];
+    })
+  );
+  M().innerHTML = h;
+  $('#dk').onchange = ev => { UI.docKind = ev.target.value; render(); };
+};
+function docNew(){
+  const n = S.docs.filter(d => d.no.startsWith('2026-한빛')).length + 1;
+  const b = '<label class="f">문서번호<input id="dNo" value="2026-한빛-' + pad(n,3) + '" style="width:150px"></label>'
+    + '<label class="f">일자<input id="dDate" type="date" value="' + TODAY + '"></label>'
+    + '<label class="f">구분<select id="dKind"><option>발송</option><option>접수</option></select></label>'
+    + '<label class="f" style="width:100%;display:flex">제목<input id="dTitle" value="(가상) " style="width:100%"></label>'
+    + '<label class="f">발신<input id="dFrom" value="인사총무팀" style="width:150px"></label>'
+    + '<label class="f">수신<input id="dTo" value="전 직원" style="width:150px"></label>'
+    + '<label class="f">보존연한<select id="dKeep"><option value="1">1년</option><option value="3" selected>3년</option><option value="5">5년</option><option value="10">10년</option><option value="30">30년</option></select></label>';
+  modal('문서 등록 (가상)', b, () => {
+    const t = $('#dTitle').value.trim();
+    if (!t) { alert('제목을 입력하세요.'); return; }
+    S.docs.push({no:$('#dNo').value, date:$('#dDate').value, kind:$('#dKind').value, title:t,
+      from:$('#dFrom').value, to:$('#dTo').value, keep:Number($('#dKeep').value)});
+    save(); closeModal(); render();
+  }, '등록');
+}
+function docCsv(){
+  csv('가상_문서대장_2026.csv', ['문서번호','일자','구분','제목','발신','수신','보존연한'],
+    S.docs.map(d => [d.no,d.date,d.kind,d.title,d.from,d.to,d.keep]));
+}
+
+/* =====================================================================
+   15. 실습 과제 (자동 채점)
+   ===================================================================== */
+const SEED_IDS = new Set(EMP_SEED.map(r => 'HB-' + pad(r[0],4)));
+
+const TASKS = [
+  { id:'T1', mod:'사원명부', view:'emp', kind:'do',
+    q:'<b>영업팀</b>에 <b>2026-09-16 입사</b>하는 신입사원 1명을 등록하세요. 이름과 공제대상가족 수는 자유롭게 정하면 됩니다(가상).',
+    hint:'사원명부 → [＋ 신규 사원 등록]. 사번은 자동으로 붙습니다.',
+    check(){ const f = S.employees.find(e => e.join === '2026-09-16' && e.team === '영업팀' && !SEED_IDS.has(e.id));
+      return f ? {ok:true, msg:'등록 확인: ' + f.id + ' ' + f.name} : {ok:false, msg:'조건에 맞는 신규 사원이 아직 없습니다.'}; } },
+
+  { id:'T2', mod:'사원명부', view:'emp', kind:'num', unit:'명',
+    q:'현재 <b>물류팀</b>의 <b>재직</b> 인원은 몇 명입니까? (휴직·퇴사 제외)',
+    hint:'사원명부에서 팀=물류팀, 재직상태=재직 으로 거르면 오른쪽에 건수가 나옵니다.',
+    ans(){ return S.employees.filter(e => e.team === '물류팀' && e.status === '재직').length; } },
+
+  { id:'T3', mod:'조직도', view:'org', kind:'num', unit:'명',
+    q:'<b>사업본부</b> 전체 인원은 몇 명입니까? (퇴사자 제외, 휴직자 포함)',
+    hint:'조직도 화면의 본부 옆 인원수를 보세요. 휴직자도 아직 우리 회사 사람입니다.',
+    ans(){ return S.employees.filter(e => e.hq === '사업본부' && e.status !== '퇴사').length; } },
+
+  { id:'T4', mod:'인사발령', view:'appt', kind:'do',
+    q:'<b>HB-0005 심유나</b> 주임을 <b>2026-10-01자 대리 승진</b>으로 발령 등록하세요.<br>'
+      + '<small class="m">등록한 뒤 사원명부에서 심유나의 직급을 확인하세요. 바뀌었을까요, 그대로일까요?</small>',
+    hint:'인사발령 → [＋ 발령 등록] → 구분 "승진" → 승진 후 직급 "대리" → 발령일 2026-10-01.\n\n'
+      + '기준일(2026-09-14)보다 뒤라서 "예정" 상태로만 남습니다. 명부 직급은 주임 그대로여야 정답입니다.',
+    check(){ const e = emp('HB-0005');
+      const a = S.appts.find(x => x.empId === 'HB-0005' && x.type === '승진' && x.date === '2026-10-01');
+      if (!a) return {ok:false, msg:'2026-10-01자 승진 발령이 아직 없습니다.'};
+      if (e.grade !== '주임') return {ok:false, msg:'발령은 등록됐는데 명부 직급이 "' + e.grade + '"로 바뀌었습니다. 다른 발령을 함께 넣지 않았는지 확인하세요.'};
+      return {ok:true, msg:'예정 발령으로만 남고 명부 직급은 주임 그대로입니다. — 미리 등록해도 급여는 안 바뀝니다.'}; } },
+
+  { id:'T4B', mod:'인사발령', view:'appt', kind:'do',
+    q:'이번에는 <b>같은 승진</b>을 <b>2026-09-01자</b>로 한 건 더 등록하세요. (발령일만 다릅니다)<br>'
+      + '<small class="m">앞 과제와 무엇이 달라지는지 사원명부에서 확인하세요.</small>',
+    hint:'발령일을 2026-09-01로 넣으면 기준일(2026-09-14)보다 앞이라 즉시 반영됩니다.\n\n'
+      + '"예정"과 "반영됨"의 차이가 바로 발령의 핵심입니다.',
+    check(){ const e = emp('HB-0005');
+      const a = S.appts.find(x => x.empId === 'HB-0005' && x.type === '승진' && x.date === '2026-09-01');
+      if (!a) return {ok:false, msg:'2026-09-01자 승진 발령이 아직 없습니다.'};
+      if (e.grade !== '대리') return {ok:false, msg:'발령은 등록됐지만 직급이 "' + e.grade + '"입니다. 승진 후 직급을 대리로 선택했는지 확인하세요.'};
+      return {ok:true, msg:'발령일이 지난 건이라 명부에 즉시 반영됐습니다. (현재 직급: 대리)'}; } },
+
+  { id:'T5', mod:'연차 관리', view:'annual', kind:'num', unit:'일',
+    q:'<b>HB-0007 천민호</b> 차장의 2026년 <b>잔여 연차</b>는 며칠입니까?',
+    hint:'연차 관리 화면의 잔여 열. 소수점(.5)이 있으면 그대로 적으세요. 반차를 쓰면 0.5일 단위가 생깁니다.',
+    ans(){ return annual(emp('HB-0007')).remain; } },
+
+  { id:'T6', mod:'휴가 결재', view:'leave', kind:'do',
+    q:'결재 대기 중인 <b>나선호 사원의 경조사(본인 결혼) 신청</b>을 <b>승인</b> 처리하세요.',
+    hint:'휴가 신청·결재 → [대기] 탭 → 해당 행의 [승인] 버튼.',
+    check(){ const l = S.leaves.find(x => x.empId === 'HB-0008' && x.type === '경조사');
+      return l && l.status === '승인' ? {ok:true, msg:'승인 처리 확인'} : {ok:false, msg:'아직 ' + (l ? l.status : '미확인') + ' 상태입니다.'}; } },
+
+  { id:'T7', mod:'휴가 결재', view:'leave', kind:'num', unit:'일',
+    q:'<b>조민석 사원(HB-0009)</b>은 2026-03-02 입사자라 연차가 월 단위로만 쌓입니다. 대기 중인 연차 <b>3일</b>(09-28~09-30)을 승인하면 잔여 연차는 며칠이 됩니까? '
+      + '<small class="m">(계산만 하세요. 실제로 승인하지 않아도 됩니다)</small><br>'
+      + '<small class="m">※ 덤으로 확인해 보세요 — 대기 목록에 <b>잔여보다 많이 신청한 사람</b>이 한 명 있습니다. 승인 버튼을 누르면 어떻게 되나요?</small>',
+    hint:'연차 관리에서 조민석의 현재 잔여를 확인하고 3일을 빼 보세요. 입사 1년 미만이라 발생일수 자체가 적습니다. 이미 승인했다면 현재 잔여가 답입니다.',
+    ans(){ const e = emp('HB-0009'), a = annual(e);
+      const l = S.leaves.find(x => x.empId === 'HB-0009' && x.type === '연차' && x.from === '2026-09-28');
+      return Math.round((l && l.status === '승인' ? a.remain : a.remain - 3) * 10) / 10; } },
+
+  { id:'T8', mod:'급여대장', view:'pay', kind:'num', unit:'원',
+    q:'2026년 <b>9월</b> 급여 기준, <b>HB-0002 서지환 부장</b>의 <b>실지급액</b>은 얼마입니까? <small class="m">(숫자만, 쉼표는 있어도 됩니다)</small>',
+    hint:'급여대장에서 귀속월 2026-09 선택 → 서지환 행의 맨 오른쪽 실지급 금액.',
+    ans(){ return payroll(emp('HB-0002'), '2026-09').net; } },
+
+  { id:'T9', mod:'급여대장', view:'pay', kind:'num', unit:'원',
+    q:'같은 서지환 부장의 <b>과세대상액</b>은 얼마입니까? <small class="m">(지급총액에서 비과세 식대를 뺀 금액. 간이세액표를 찾을 때 쓰는 "월급여액"이 바로 이 값입니다)</small>',
+    hint:'급여대장의 과세대상 열, 또는 급여명세서 화면 맨 아래 "과세대상액". 지급총액 − 식대 200,000원.',
+    ans(){ return payroll(emp('HB-0002'), '2026-09').taxable; } },
+
+  { id:'T10', mod:'급여명세서', view:'slip', kind:'num', unit:'원',
+    q:'서지환 부장은 지금 <b>공제대상가족 3명 · 8~20세 자녀 1명</b>입니다. 만약 <b>가족 1명 · 자녀 0명</b>(미혼 단독 세대)이라면 2026년 9월 <b>소득세</b>는 얼마가 됩니까?',
+    hint:'급여명세서 → 서지환 선택 → 「간이세액표 실험」에서 가족 수를 1명, 자녀 수를 0명으로 바꾸면 소득세가 바로 나옵니다.',
+    ans(){ const p = payroll(emp('HB-0002'), '2026-09'); return simpleTax(p.taxable, 1, 0).tax; } },
+
+  { id:'T11', mod:'비품 재고', view:'stock', kind:'do',
+    q:'안전재고보다 부족한 품목을 <b>모두</b> 입고 처리해서, 부족 품목이 <b>0개</b>가 되게 하세요.',
+    hint:'비품 재고 화면 위쪽 노란 경고에 부족 품목이 나옵니다. 각 행의 [입고] 버튼을 누르세요.',
+    check(){ const low = S.stock.filter(s => s.qty < s.safe);
+      return low.length === 0 ? {ok:true, msg:'모든 품목이 안전재고 이상입니다.'}
+        : {ok:false, msg:'아직 ' + low.length + '품목 부족: ' + low.map(s=>s.name).join(', ')}; } },
+
+  { id:'T12', mod:'자산 대장', view:'asset', kind:'do',
+    q:'보관중인 노트북 <b>AS-2026-004</b>를 아무 재직자에게 <b>불출(사용중)</b> 처리하세요.',
+    hint:'자산 대장에서 AS-2026-004 검색 → [불출/반납] → 사용자 선택 → 상태 "사용중".',
+    check(){ const a = S.assets.find(x => x.code === 'AS-2026-004');
+      return a.holder && a.status === '사용중'
+        ? {ok:true, msg:'불출 확인: ' + ((emp(a.holder)||{}).name || a.holder)}
+        : {ok:false, msg:'아직 사용자 미지정이거나 상태가 "' + a.status + '"입니다.'}; } },
+
+  { id:'T13', mod:'회의실 예약', view:'room', kind:'do',
+    q:'<b>2026-09-15(화) 14:00~15:00</b>, <b>대회의실(3층)</b>에 「신규 입사자 오리엔테이션」 회의를 예약하세요.',
+    hint:'회의실 예약 → [＋ 예약 등록]. 시간이 겹치면 등록이 막히니 회의실과 시간을 정확히 맞추세요.',
+    check(){ const b = S.bookings.find(x => x.date === '2026-09-15' && x.room === S.rooms[0] && x.start === '14:00');
+      return b ? {ok:true, msg:'예약 확인: ' + b.title} : {ok:false, msg:'해당 조건의 예약이 아직 없습니다.'}; } },
+
+  { id:'T14', mod:'문서 대장', view:'doc', kind:'do',
+    q:'문서 대장에 <b>발송</b> 문서를 1건 새로 등록하세요. (제목은 자유, 가상)',
+    hint:'문서 대장 → [＋ 문서 등록].',
+    check(){ const n = S.docs.filter(d => d.kind === '발송').length;
+      return n > 7 ? {ok:true, msg:'발송 문서 ' + n + '건 (기본 7건 + 실습 등록분)'} : {ok:false, msg:'아직 등록되지 않았습니다.'}; } },
+];
+
+function taskState(t){
+  if (t.kind === 'do') return t.check();
+  const log = S.taskLog[t.id];
+  if (!log || log.val == null) return {ok:false, msg:''};
+  const correct = t.ans();
+  const ok = Math.abs(Number(log.val) - correct) < 0.05;
+  return {ok, msg: ok ? '정답입니다.' : '입력값 ' + won(log.val) + ' — 다시 확인해 보세요.'};
+}
+VIEWS.task = function(){
+  const states = TASKS.map(t => ({t, s: taskState(t)}));
+  const done = states.filter(x => x.s.ok).length;
+  let h = head('실습 과제', TASKS.length + '개 과제입니다. 화면에서 직접 처리하면 자동으로 채점됩니다. 모든 데이터는 가상이니 마음 놓고 눌러 보세요.');
+  h += '<div class="card"><div style="display:flex;align-items:center;gap:12px">'
+    + '<b style="font-size:16px">진도 ' + done + ' / ' + TASKS.length + '</b>'
+    + '<div style="flex:1;height:12px;background:var(--surface-strong);border-radius:6px;overflow:hidden">'
+    + '<div style="width:' + Math.round(done/TASKS.length*100) + '%;height:100%;background:var(--brand-teal)"></div></div>'
+    + '<span style="color:var(--muted);font-size:12px">' + Math.round(done/TASKS.length*100) + '%</span>'
+    + '<button class="ghost" onclick="taskClear()">답안 지우기</button></div></div>';
+
+  states.forEach(({t, s}, i) => {
+    h += '<div class="task' + (s.ok ? ' done' : '') + '">'
+      + '<h4>' + (s.ok ? '✅ ' : '☐ ') + '과제 ' + (i+1) + '. <span style="color:var(--brand-teal)">[' + t.mod + ']</span></h4>'
+      + '<div class="q">' + t.q + '</div>';
+    if (t.kind === 'num') {
+      const log = S.taskLog[t.id] || {};
+      h += '<input id="ta_' + t.id + '" value="' + (log.val != null ? log.val : '') + '" placeholder="답 입력" style="width:140px"> '
+         + '<span style="color:var(--muted);font-size:12px">' + (t.unit||'') + '</span> '
+         + '<button class="mini" onclick="taskAns(\'' + t.id + '\')">제출</button> ';
+    }
+    h += '<button class="mini ghost" onclick="go(\'' + t.view + '\')">해당 화면 열기</button> '
+       + '<button class="mini ghost" onclick="taskHint(\'' + t.id + '\')">힌트</button>';
+    if (s.msg) h += '<div class="res" style="color:' + (s.ok ? 'var(--ok-fg)' : '#8a3d00') + '">' + (s.ok ? '✔ ' : '· ') + esc(s.msg) + '</div>';
+    h += '</div>';
+  });
+  h += '<div class="note">채점 기준은 이 앱 안의 현재 데이터입니다. 다른 실습으로 데이터가 바뀌면 정답도 함께 바뀝니다 — 실제 인사 업무도 그렇습니다.</div>';
+  M().innerHTML = h;
+};
+function taskHint(id){
+  const t = TASKS.find(x => x.id === id);
+  modal('힌트 — ' + t.mod, '<div class="note" style="margin:0">' + t.hint + '</div>');
+}
+function taskAns(id){
+  const v = $('#ta_' + id).value.replace(/[,\s원명일]/g,'');
+  if (v === '' || isNaN(Number(v))) { alert('숫자로 입력하세요.'); return; }
+  S.taskLog[id] = {val: Number(v)};
+  save(); render();
+}
+function taskClear(){
+  if (!confirm('제출한 답안만 지웁니다. 실습으로 입력한 데이터는 그대로 둡니다. 진행할까요?')) return;
+  S.taskLog = {}; save(); render();
+}
+
+/* ===================================================================== */
+load();
+render();
+
+</script>
+</body>
+</html>
